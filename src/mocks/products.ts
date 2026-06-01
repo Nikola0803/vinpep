@@ -3,7 +3,7 @@ export interface Product {
   name: string;
   peptideCode: string;
   casNumber: string;
-  category: 'compounds' | 'blends' | 'bioregulators' | 'capsules';
+  category: 'compounds' | 'blends' | 'bioregulators';
   subcategory: 'peptides' | 'blends' | 'glp' | 'metabolic';
   purity: string;
   priceMin: number;

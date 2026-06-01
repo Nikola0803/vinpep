@@ -15,6 +15,7 @@ const filters = [
 export default function Shop() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
+  const categoryParam = searchParams.get('category') || '';
 
   const [activeFilter, setActiveFilter] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
@@ -32,7 +33,9 @@ export default function Shop() {
       );
     }
 
-    if (activeFilter !== 'all') {
+    if (categoryParam) {
+      result = result.filter((p) => p.category === categoryParam);
+    } else if (activeFilter !== 'all') {
       result = result.filter((p) => p.subcategory === activeFilter);
     }
 

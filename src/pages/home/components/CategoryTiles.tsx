@@ -19,12 +19,6 @@ const categories = [
     icon: 'fa-solid fa-dna',
     link: '/shop?category=bioregulators',
   },
-  {
-    name: 'Capsules',
-    description: 'Lyophilized peptide powders in precisely measured oral research capsules.',
-    icon: 'fa-solid fa-capsules',
-    link: '/shop?category=capsules',
-  },
 ];
 
 export default function CategoryTiles() {
@@ -38,7 +32,7 @@ export default function CategoryTiles() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
           {categories.map((cat, index) => (
             <Link
               key={index}

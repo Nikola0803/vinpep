@@ -1,0 +1,400 @@
+/*
+ * Valkyrie Peptides — Spa / Luxury Women's Theme
+ * Loaded on top of index.css when VITE_THEME === 'spa'
+ * Overrides all vintage/espresso/brass tokens with soft white, blush, rose, sage palette.
+ */
+
+/* ─── Google Fonts: Inter + Libre Baskerville ─────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap');
+
+/* ─── Base reset — override vintage body ──────────────────────────────────── */
+@layer base {
+  body {
+    font-family: 'Inter', 'Helvetica Neue', sans-serif !important;
+    color: #3D3535 !important;
+    background-color: #FAFAF8 !important;
+    background-image:
+      radial-gradient(ellipse at 60% 0%, #FDF6F0 0%, #FAF8F5 50%, #F6F4F0 100%) !important;
+    background-size: 100% 100% !important;
+    background-attachment: fixed !important;
+    font-size: 15px;
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', 'Libre Baskerville', Georgia, serif !important;
+    letter-spacing: 0.06em !important;
+    text-transform: none !important;
+    font-weight: 300 !important;
+    line-height: 1.25 !important;
+    color: #2C2424 !important;
+  }
+
+  /* Inputs */
+  input, textarea, select {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+/* ─── CSS custom properties — spa palette ─────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --spa-white:       #FAFAF8;
+  --spa-pearl:       #F5F0EB;
+  --spa-blush:       #F2E8E4;
+  --spa-blush-deep:  #E8D5CE;
+  --spa-cream:       #F7F2EE;
+
+  /* Accents */
+  --spa-rose:        #C4746E;
+  --spa-rose-light:  #D9948E;
+  --spa-rose-dark:   #A85C56;
+  --spa-mauve:       #9B7B7B;
+  --spa-dusty:       #B89090;
+
+  /* Greens */
+  --spa-sage:        #8FAF96;
+  --spa-sage-light:  #B2CAB8;
+  --spa-sage-dark:   #6A9172;
+
+  /* Text */
+  --spa-ink:         #2C2424;
+  --spa-stone:       #5C4F4F;
+  --spa-muted:       #9B8888;
+
+  /* Borders */
+  --spa-border:      #E2D5D0;
+  --spa-border-soft: #EDE3DF;
+}
+
+/* ─── Utility overrides — map vintage classes → spa tokens ───────────────── */
+
+/* Parchment → Pearl/White */
+.parchment-grain {
+  background-color: var(--spa-pearl) !important;
+}
+.parchment-grain::before {
+  background-image: none !important;
+  opacity: 0 !important;
+}
+
+.bg-cream-grain {
+  background-color: var(--spa-cream) !important;
+}
+.bg-cream-grain::before {
+  background-image: none !important;
+}
+
+/* Vignette — much softer for spa */
+.vignette-overlay::after {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(180, 140, 130, 0.08) 100%) !important;
+}
+
+/* Distressed → clean, no texture */
+.distressed-overlay::after {
+  background-image: none !important;
+  display: none !important;
+}
+
+/* Brass → rose */
+.brass-border {
+  border-color: var(--spa-rose) !important;
+}
+.brass-double-border::before,
+.brass-double-border::after {
+  border-color: var(--spa-rose) !important;
+}
+.brass-rule {
+  border-top-color: var(--spa-rose) !important;
+  border-bottom-color: var(--spa-rose) !important;
+}
+
+/* Stamp badge */
+.stamp-badge {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.05em !important;
+  border-color: var(--spa-rose) !important;
+  color: var(--spa-rose) !important;
+  border-radius: 0 !important;
+}
+
+/* Text shadows — subtle for spa */
+.text-shadow-dark {
+  text-shadow: 0 1px 6px rgba(60, 30, 30, 0.12) !important;
+}
+.text-shadow-brass {
+  text-shadow: 0 0 20px rgba(196, 116, 110, 0.2) !important;
+}
+
+/* Image blur edge — use blush tint */
+.image-blur-edge::after {
+  box-shadow: inset 0 0 40px 10px rgba(242, 232, 228, 0.5) !important;
+}
+
+/* ─── Spa-exclusive utility classes ──────────────────────────────────────── */
+@layer components {
+
+  /* Soft card — used for product cards, info blocks */
+  .spa-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--spa-border-soft);
+    border-radius: 2px;
+    box-shadow: 0 2px 12px rgba(180, 140, 130, 0.06);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .spa-card:hover {
+    box-shadow: 0 6px 24px rgba(180, 140, 130, 0.12);
+    transform: translateY(-1px);
+  }
+
+  /* Petal border — decorative thin rule with rose center dot */
+  .petal-border {
+    position: relative;
+    text-align: center;
+  }
+  .petal-border::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--spa-border), transparent);
+    transform: translateY(-50%);
+  }
+
+  /* Spa rule — single thin rose line */
+  .spa-rule {
+    border: none;
+    border-top: 1px solid var(--spa-border);
+    height: 1px;
+    margin: 1.5rem 0;
+  }
+
+  /* Spa button — primary */
+  .spa-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background-color: var(--spa-rose);
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--spa-rose);
+    transition: background-color 0.25s ease, border-color 0.25s ease;
+    cursor: pointer;
+  }
+  .spa-btn-primary:hover {
+    background-color: var(--spa-rose-dark);
+    border-color: var(--spa-rose-dark);
+  }
+
+  /* Spa button — ghost */
+  .spa-btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: var(--spa-rose);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.75rem 2rem;
+    border: 1px solid var(--spa-rose);
+    transition: background-color 0.25s ease, color 0.25s ease;
+    cursor: pointer;
+  }
+  .spa-btn-ghost:hover {
+    background-color: var(--spa-rose);
+    color: #FFFFFF;
+  }
+
+  /* Floating label input style */
+  .spa-input {
+    width: 100%;
+    background: #FFFFFF;
+    border: 1px solid var(--spa-border);
+    padding: 0.625rem 0.875rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    color: var(--spa-ink);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .spa-input::placeholder {
+    color: var(--spa-muted);
+  }
+  .spa-input:focus {
+    border-color: var(--spa-rose);
+    box-shadow: 0 0 0 3px rgba(196, 116, 110, 0.08);
+  }
+
+  /* Tag / badge chip */
+  .spa-tag {
+    display: inline-block;
+    background: var(--spa-blush);
+    color: var(--spa-stone);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.625rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0;
+  }
+
+  /* Section heading style */
+  .spa-heading {
+    font-family: 'Cormorant Garamond', serif !important;
+    font-weight: 300 !important;
+    letter-spacing: 0.04em !important;
+    color: var(--spa-ink) !important;
+    text-transform: none !important;
+  }
+
+  /* Eyebrow / kicker text */
+  .spa-eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--spa-rose);
+  }
+
+  /* Soft divider with ornament */
+  .spa-ornament-rule {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--spa-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+  }
+  .spa-ornament-rule::before,
+  .spa-ornament-rule::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--spa-border);
+  }
+}
+
+/* ─── Tailwind color alias overrides for spa ──────────────────────────────── */
+/*
+ * We remap Tailwind utility classes by mapping the vintage color names
+ * to spa equivalents. Pages that use bg-espresso / text-brass / etc.
+ * automatically pick up the spa colors in the spa build.
+ */
+
+/* espresso → ink */
+[class*="text-espresso"]   { color: var(--spa-ink) !important; }
+[class*="bg-espresso"]     { background-color: var(--spa-ink) !important; }
+[class*="border-espresso"] { border-color: var(--spa-ink) !important; }
+
+/* walnut → stone */
+[class*="text-walnut"]     { color: var(--spa-stone) !important; }
+[class*="bg-walnut"]       { background-color: var(--spa-stone) !important; }
+
+/* saddle → mauve */
+[class*="text-saddle"]     { color: var(--spa-mauve) !important; }
+[class*="bg-saddle"]       { background-color: var(--spa-mauve) !important; }
+[class*="border-saddle"]   { border-color: var(--spa-dusty) !important; }
+
+/* leather → dusty */
+[class*="text-leather"]    { color: var(--spa-dusty) !important; }
+[class*="bg-leather"]      { background-color: var(--spa-dusty) !important; }
+
+/* brass → rose */
+[class*="text-brass"]      { color: var(--spa-rose) !important; }
+[class*="bg-brass"]        { background-color: var(--spa-rose) !important; }
+[class*="border-brass"]    { border-color: var(--spa-rose) !important; }
+[class*="hover\:bg-brass"]:hover      { background-color: var(--spa-rose) !important; }
+[class*="hover\:text-brass"]:hover    { color: var(--spa-rose) !important; }
+[class*="hover\:border-brass"]:hover  { border-color: var(--spa-rose) !important; }
+[class*="bg-brass-light"]  { background-color: var(--spa-rose-light) !important; }
+[class*="hover\:bg-brass-light"]:hover { background-color: var(--spa-rose-light) !important; }
+[class*="text-brass-light"] { color: var(--spa-rose-light) !important; }
+
+/* parchment → pearl */
+[class*="bg-parchment"]    { background-color: var(--spa-pearl) !important; }
+[class*="text-parchment"]  { color: var(--spa-pearl) !important; }
+
+/* cream → blush */
+[class*="bg-cream"]        { background-color: var(--spa-blush) !important; }
+[class*="text-cream"]      { color: var(--spa-blush) !important; }
+
+/* ivory → white */
+[class*="bg-ivory"]        { background-color: #FFFFFF !important; }
+[class*="text-ivory"]      { color: #FFFFFF !important; }
+
+/* font-display → Cormorant Garamond */
+[class*="font-display"] {
+  font-family: 'Cormorant Garamond', 'Libre Baskerville', Georgia, serif !important;
+  font-weight: 300 !important;
+  text-transform: none !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* font-body → Inter */
+[class*="font-body"] {
+  font-family: 'Inter', 'Helvetica Neue', sans-serif !important;
+}
+
+/* font-mono stays but softer color */
+[class*="font-mono"] {
+  font-family: 'Courier Prime', 'Courier New', monospace !important;
+  color: var(--spa-stone);
+}
+
+/* Tracking overrides — reduce aggressive vintage tracking */
+[class*="tracking-[0.2em]"],
+[class*="tracking-[0.25em]"],
+[class*="tracking-widest"],
+[class*="tracking-ultra"] {
+  letter-spacing: 0.1em !important;
+}
+
+/* ─── Navbar spa override ─────────────────────────────────────────────────── */
+/*
+ * Navbar likely has bg-espresso or dark bg. For spa, it should be white/pearl.
+ * We override via attribute selector targeting the nav element.
+ */
+nav,
+header[class*="bg-espresso"],
+header[class*="bg-walnut"],
+div[class*="bg-espresso"],
+div[class*="bg-walnut"] {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid var(--spa-border-soft) !important;
+  color: var(--spa-ink) !important;
+}
+
+/* ─── Footer spa override ────────────────────────────────────────────────── */
+footer[class*="bg-espresso"],
+footer[class*="bg-walnut"],
+footer {
+  background-color: var(--spa-pearl) !important;
+  border-top: 1px solid var(--spa-border) !important;
+  color: var(--spa-stone) !important;
+}
+
+/* ─── Box shadow overrides ───────────────────────────────────────────────── */
+[class*="shadow-[0_0_15px_rgba(184,148,42"] {
+  box-shadow: 0 0 15px rgba(196, 116, 110, 0.2) !important;
+}
+
+/* ─── Ticker / announcement bar ─────────────────────────────────────────── */
+[class*="bg-espresso"] .ticker,
+[class*="bg-walnut"] .ticker {
+  color: var(--spa-rose) !important;
+}

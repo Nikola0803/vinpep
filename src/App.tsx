@@ -6,6 +6,7 @@ import i18n from "./i18n";
 import CartDrawer from "./components/feature/CartDrawer";
 import FloatingCtaBar from "./components/feature/FloatingCtaBar";
 import ScrollToTop from "./components/ScrollToTop";
+import AgeGate from "./components/feature/AgeGate";
 
 function App() {
   return (
@@ -13,6 +14,8 @@ function App() {
       <CartProvider>
         <BrowserRouter basename={__BASE_PATH__}>
           <ScrollToTop />
+          {/* AgeGate renders above everything — blocks the entire site until confirmed */}
+          <AgeGate />
           <AppRoutes />
           <CartDrawer />
           <FloatingCtaBar />

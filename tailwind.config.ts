@@ -7,6 +7,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        // ── Vintage Peptides palette ───────────────────────────────────────
         parchment: '#F0E6D0',
         cream: '#EDE4CC',
         ivory: '#FAF6ED',
@@ -17,11 +18,33 @@ export default {
         brass: '#B8942A',
         'brass-light': '#D4B84A',
         'brass-dark': '#8A6E1F',
+        // ── Valkyrie Peptides (spa) palette ───────────────────────────────
+        'spa-white':      '#FAFAF8',
+        'spa-pearl':      '#F5F0EB',
+        'spa-blush':      '#F2E8E4',
+        'spa-blush-deep': '#E8D5CE',
+        'spa-cream':      '#F7F2EE',
+        'spa-rose':       '#C4746E',
+        'spa-rose-light': '#D9948E',
+        'spa-rose-dark':  '#A85C56',
+        'spa-mauve':      '#9B7B7B',
+        'spa-dusty':      '#B89090',
+        'spa-sage':       '#8FAF96',
+        'spa-sage-light': '#B2CAB8',
+        'spa-sage-dark':  '#6A9172',
+        'spa-ink':        '#2C2424',
+        'spa-stone':      '#5C4F4F',
+        'spa-muted':      '#9B8888',
+        'spa-border':     '#E2D5D0',
+        'spa-border-soft':'#EDE3DF',
       },
       fontFamily: {
         display: ['"Playfair Display"', 'serif'],
         body: ['Lora', 'serif'],
         mono: ['"Courier Prime"', 'monospace'],
+        // Spa fonts — active in spa build
+        'spa-display': ['"Cormorant Garamond"', '"Libre Baskerville"', 'Georgia', 'serif'],
+        'spa-body':    ['Inter', '"Helvetica Neue"', 'sans-serif'],
       },
       spacing: {
         '128': '32rem',

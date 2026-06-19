@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { coaEntries } from '@/mocks/coa';
 import PageLayout from '@/components/feature/PageLayout';
 
@@ -87,26 +87,115 @@ function DetailModal({ entry, onClose }: DetailModalProps) {
           <div className="brass-rule max-w-xs mb-6" />
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-brass/40 font-display text-[10px] tracking-[0.2em] uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors whitespace-nowrap">
-              <span className="w-4 h-4 flex items-center justify-center">
-                <i className="ri-file-list-3-line" />
+            {entry.coaUrl !== '#' ? (
+              <a
+                href={entry.coaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="flex-1 flex items-center justify-center gap-2 py-3 border border-brass/40 font-display text-[10px] tracking-[0.2em] uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors whitespace-nowrap"
+              >
+                <span className="w-4 h-4 flex items-center justify-center">
+                  <i className="ri-file-list-3-line" />
+                </span>
+                Download COA
+              </a>
+            ) : (
+              <span className="flex-1 flex items-center justify-center gap-2 py-3 border border-brass/20 font-display text-[10px] tracking-[0.2em] uppercase text-saddle/40 whitespace-nowrap cursor-not-allowed">
+                <span className="w-4 h-4 flex items-center justify-center">
+                  <i className="ri-file-list-3-line" />
+                </span>
+                COA Coming Soon
               </span>
-              View COA
-            </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-brass/40 font-display text-[10px] tracking-[0.2em] uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors whitespace-nowrap">
-              <span className="w-4 h-4 flex items-center justify-center">
-                <i className="ri-flask-line" />
-              </span>
-              HPLC Report
-            </button>
-            <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-brass/40 font-display text-[10px] tracking-[0.2em] uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors whitespace-nowrap">
-              <span className="w-4 h-4 flex items-center justify-center">
-                <i className="ri-bar-chart-line" />
-              </span>
-              Mass Spec
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PdfModal({ url, onClose }: { url: string; onClose: () => void }) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+
+    // Fetch the PDF as a blob so it never goes through React Router
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch PDF');
+        return res.blob();
+      })
+      .then((blob) => {
+        if (cancelled) return;
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      })
+      .catch(() => {
+        if (!cancelled) setError(true);
+      });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div
+        className="relative w-full max-w-4xl h-[90vh] bg-espresso flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-2 border-b border-brass/30">
+          <span className="font-mono text-[10px] tracking-widest uppercase text-brass">Certificate of Analysis</span>
+          <div className="flex items-center gap-3">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-1.5 px-2.5 py-1 border border-brass/40 text-cream/80 hover:text-cream hover:border-brass transition-colors font-mono text-[10px] tracking-wider uppercase"
+            >
+              <i className="ri-download-line text-xs" />
+              Download
+            </a>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center text-cream/60 hover:text-cream transition-colors"
+            >
+              <i className="ri-close-line text-lg" />
             </button>
           </div>
         </div>
+        {error ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-cream/60 font-mono text-sm px-6 text-center">
+            <span>Couldn't preview this PDF in your browser.</span>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download
+              className="flex items-center gap-2 px-4 py-2 border border-brass/40 text-cream hover:bg-brass hover:text-espresso transition-colors font-mono text-xs uppercase tracking-wider"
+            >
+              <i className="ri-download-line" />
+              Download PDF instead
+            </a>
+          </div>
+        ) : !blobUrl ? (
+          <div className="flex-1 flex items-center justify-center text-cream/60 font-mono text-sm">
+            Loading…
+          </div>
+        ) : (
+          <iframe
+            src={blobUrl}
+            className="flex-1 w-full"
+            title="Certificate of Analysis"
+          />
+        )}
       </div>
     </div>
   );
@@ -115,6 +204,7 @@ function DetailModal({ entry, onClose }: DetailModalProps) {
 export default function CoaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEntry, setSelectedEntry] = useState<(typeof coaEntries)[0] | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const filtered = coaEntries.filter((entry) => {
     const q = searchQuery.toLowerCase();
@@ -251,18 +341,31 @@ export default function CoaPage() {
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => setSelectedEntry(entry)}
+                          onClick={() => entry.coaUrl !== '#' ? setPdfUrl(entry.coaUrl) : setSelectedEntry(entry)}
                           className="w-8 h-8 flex items-center justify-center text-saddle hover:text-espresso border border-brass/20 hover:border-brass/60 transition-colors"
-                          title="Details"
+                          title={entry.coaUrl !== '#' ? 'View PDF' : 'Details'}
                         >
                           <i className="ri-eye-line text-sm" />
                         </button>
-                        <button
-                          className="w-8 h-8 flex items-center justify-center text-saddle hover:text-espresso border border-brass/20 hover:border-brass/60 transition-colors"
-                          title="Download COA"
-                        >
-                          <i className="ri-download-line text-sm" />
-                        </button>
+                        {entry.coaUrl !== '#' ? (
+                          <a
+                            href={entry.coaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="w-8 h-8 flex items-center justify-center text-saddle hover:text-espresso border border-brass/20 hover:border-brass/60 transition-colors"
+                            title="Download COA"
+                          >
+                            <i className="ri-download-line text-sm" />
+                          </a>
+                        ) : (
+                          <span
+                            className="w-8 h-8 flex items-center justify-center text-saddle/30 border border-brass/10 cursor-not-allowed"
+                            title="COA Coming Soon"
+                          >
+                            <i className="ri-download-line text-sm" />
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -321,13 +424,13 @@ export default function CoaPage() {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => setSelectedEntry(entry)}
+                    onClick={() => entry.coaUrl !== '#' ? setPdfUrl(entry.coaUrl) : setSelectedEntry(entry)}
                     className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-brass/30 font-display text-[10px] tracking-wider uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors"
                   >
                     <span className="w-4 h-4 flex items-center justify-center">
                       <i className="ri-eye-line text-xs" />
                     </span>
-                    Details
+                    {entry.coaUrl !== '#' ? 'View PDF' : 'Details'}
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-brass/30 font-display text-[10px] tracking-wider uppercase text-espresso hover:bg-brass hover:text-parchment transition-colors">
                     <span className="w-4 h-4 flex items-center justify-center">
@@ -413,6 +516,7 @@ export default function CoaPage() {
       </div>
 
       <DetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+      {pdfUrl && <PdfModal url={pdfUrl} onClose={() => setPdfUrl(null)} />}
     </PageLayout>
   );
 }

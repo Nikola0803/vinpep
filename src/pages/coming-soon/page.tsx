@@ -18,15 +18,20 @@ export default function ComingSoonPage() {
     });
 
     try {
-      const res = await fetch("https://readdy.ai/api/form/d8krnsbsisn5c04b3nng", {
+      const wcUrl = import.meta.env.VITE_WC_URL ?? '';
+      const res = await fetch(`${wcUrl}/wp-json/vp-crm/v1/subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: params.toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email") as string,
+          name:  formData.get("name")  as string,
+        }),
       });
       if (res.ok) {
         setSubmitted(true);
       } else {
-        setError("Something went wrong. Please try again.");
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "Something went wrong. Please try again.");
       }
     } catch {
       setError("Network error. Please check your connection.");
@@ -109,7 +114,6 @@ export default function ComingSoonPage() {
         ) : (
           <div className="animate-slide-up max-w-md mx-auto">
             <form
-              data-readdy-form
               id="coming-soon-email"
               onSubmit={handleSubmit}
               className="flex flex-col gap-4"

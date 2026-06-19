@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCart } from '../../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import type { Product } from '../../../mocks/products';
+import { sanitizeExcerpt } from '@/utils/sanitizeDescription';
 
 interface ProductCardProps {
   product: Product;
@@ -305,9 +306,9 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Description — hidden on hover to make room */}
+        {/* Description — sanitized excerpt, hidden on hover to make room */}
         <p className="font-body text-xs text-saddle/70 leading-relaxed mb-3 flex-1 group-hover:hidden">
-          {product.description}
+          {sanitizeExcerpt(product.description, 120)}
         </p>
 
         {/* Research Use Only stamp */}

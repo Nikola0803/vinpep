@@ -2,8 +2,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
 import { useCart } from '@/context/CartContext';
 import { products } from '@/mocks/products';
+import { coaEntries } from '@/mocks/coa';
 import { useState, useMemo } from 'react';
 import ProductCard from '@/pages/home/components/ProductCard';
+import { sanitizeDescription } from '@/utils/sanitizeDescription';
 
 const tabs = [
   { label: 'Overview', value: 'overview' },
@@ -200,7 +202,7 @@ export default function ProductDetail() {
               <div className="brass-rule max-w-xs mb-6" />
 
               <p className="font-body text-sm text-saddle leading-relaxed mb-6">
-                {product.description}
+                {sanitizeDescription(product.description)}
               </p>
 
               {/* Dosage selector */}
@@ -274,6 +276,23 @@ export default function ProductDetail() {
               >
                 Add to Cart
               </button>
+
+              {/* ── Hardcoded RUO Warning — do not remove or alter ── */}
+              <div className="mt-4 p-4 border border-dashed border-red-900/25 bg-red-900/[0.025] select-none pointer-events-none">
+                <div className="flex items-start gap-3">
+                  <i className="ri-error-warning-line text-red-900/60 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-display text-[10px] tracking-[0.18em] uppercase text-red-900/80 mb-1">
+                      For Research Use Only
+                    </p>
+                    <p className="font-mono text-[10px] leading-relaxed text-saddle/70">
+                      This product is intended solely for laboratory research by qualified professionals aged 21 or older.
+                      Not for human consumption, injection, veterinary use, or therapeutic application.
+                      Not evaluated by the FDA. Not intended to diagnose, treat, cure, or prevent any disease.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               {/* View CoA link */}
               <div className="mt-3">
@@ -408,7 +427,9 @@ export default function ProductDetail() {
                 </div>
               )}
 
-              {activeTab === 'coa' && (
+              {activeTab === 'coa' && (() => {
+                  const productCoas = coaEntries.filter((c) => c.productIds.includes(product.id));
+                  return (
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                     <div className="p-4 border border-brass/20 bg-cream/30">
@@ -429,37 +450,48 @@ export default function ProductDetail() {
                     </div>
                   </div>
 
+                  {productCoas.length > 0 && (
                   <div>
                     <h3 className="font-display text-sm tracking-[0.2em] uppercase text-espresso mb-5">
-                      Download Documents
+                      Certificate of Analysis
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[
-                        { name: 'Certificate of Analysis (COA)', file: `${product.name}_COA_LotVP2026-05.pdf`, size: '284 KB', date: 'May 2026', icon: 'ri-file-list-3-line' },
-                        { name: 'HPLC Purity Report', file: `${product.name}_HPLC_2026-05.pdf`, size: '1.2 MB', date: 'May 2026', icon: 'ri-bar-chart-box-line' },
-                        { name: 'Mass Spectrometry Report', file: `${product.name}_MS_2026-05.pdf`, size: '856 KB', date: 'May 2026', icon: 'ri-pulse-line' },
-                        { name: 'Safety Data Sheet (SDS)', file: `${product.name}_SDS_2026.pdf`, size: '412 KB', date: 'May 2026', icon: 'ri-shield-check-line' },
-                      ].map((doc, i) => (
-                        <div key={i} className="flex items-center gap-4 p-4 border border-brass/20 bg-cream/30 hover:bg-cream/50 transition-colors">
+                      {productCoas.map((coa) => (
+                        <div key={coa.id} className="flex items-center gap-4 p-4 border border-brass/20 bg-cream/30 hover:bg-cream/50 transition-colors">
                           <span className="w-10 h-10 flex items-center justify-center text-brass text-lg flex-shrink-0">
-                            <i className={doc.icon} />
+                            <i className="ri-file-list-3-line" />
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="font-display text-xs tracking-wider uppercase text-espresso truncate">{doc.name}</p>
+                            <p className="font-display text-xs tracking-wider uppercase text-espresso truncate">
+                              COA — Batch {coa.batchNumber}
+                            </p>
                             <p className="font-mono text-[10px] text-saddle/60 mt-0.5">
-                              {doc.file} &middot; {doc.size} &middot; {doc.date}
+                              Purity: {coa.purity} &middot; {coa.testDate}
                             </p>
                           </div>
-                          <button className="flex items-center gap-1.5 px-3 py-2 border border-brass/40 text-espresso hover:bg-brass hover:text-espresso transition-all duration-300 flex-shrink-0">
-                            <span className="w-4 h-4 flex items-center justify-center text-xs">
-                              <i className="ri-download-line" />
+                          {coa.coaUrl !== '#' ? (
+                            <a
+                              href={coa.coaUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              download
+                              className="flex items-center gap-1.5 px-3 py-2 border border-brass/40 text-espresso hover:bg-brass hover:text-espresso transition-all duration-300 flex-shrink-0"
+                            >
+                              <span className="w-4 h-4 flex items-center justify-center text-xs">
+                                <i className="ri-download-line" />
+                              </span>
+                              <span className="font-mono text-[10px] tracking-wider uppercase">Download</span>
+                            </a>
+                          ) : (
+                            <span className="flex items-center gap-1.5 px-3 py-2 border border-brass/20 text-saddle/40 flex-shrink-0 cursor-not-allowed">
+                              <span className="font-mono text-[10px] tracking-wider uppercase">Coming Soon</span>
                             </span>
-                            <span className="font-mono text-[10px] tracking-wider uppercase">Download</span>
-                          </button>
+                          )}
                         </div>
                       ))}
                     </div>
                   </div>
+                  )}
 
                   <div className="p-4 border border-dashed border-brass/20 bg-cream/20">
                     <div className="flex items-start gap-3">
@@ -471,13 +503,14 @@ export default function ProductDetail() {
                           Lot-Specific Documentation
                         </p>
                         <p className="font-mono text-[10px] leading-relaxed text-saddle/60">
-                          All documents are lot-specific and generated by independent third-party laboratories. Each batch receives a unique lot number (e.g., VP2026-05) for full traceability. Download links are active for 90 days from batch release.
+                          All documents are lot-specific and generated by independent third-party laboratories. Each batch receives a unique lot number for full traceability.
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+                  );
+              })()}
 
               {activeTab === 'tests' && (
                 <div className="space-y-4">

@@ -59,7 +59,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('BPC-157 TB-500 10mg', 'bpc-tb-10'),
+    image: '/products/bpc-157 tb-500 blend.png',
   },
   {
     id: 'bpc-tb-20',
@@ -81,7 +81,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('BPC-157 TB-500 20mg', 'bpc-tb-20'),
+    image: '/products/bpc-157 tb-500 blend.png',
   },
 
   // ── CJC-1295 / Ipamorelin Blend ────────────────────────────────────────────
@@ -105,7 +105,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('CJC-1295 Ipamorelin 10mg', 'cjc-ipa-10'),
+    image: '/products/cjc-1295 ipamorelin blend vp.png',
   },
 
   // ── Semaglutide ────────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Semaglutide 5mg', 'sema-5'),
+    image: '/products/semaglitude 5mg.png',
   },
   {
     id: 'sema-10',
@@ -151,7 +151,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Semaglutide 10mg', 'sema-10'),
+    image: '/products/semaglitude 5mg.png',
   },
 
   // ── Tirzepatide ────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Tirzepatide 10mg', 'tirz-10'),
+    image: '/products/tirzepaatide 10mg.png',
   },
   {
     id: 'tirz-15',
@@ -197,7 +197,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Tirzepatide 15mg', 'tirz-15'),
+    image: '/products/tirzepaatide 10mg.png',
   },
   {
     id: 'tirz-30',
@@ -219,7 +219,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Tirzepatide 30mg', 'tirz-30'),
+    image: '/products/tirzepaatide 10mg.png',
   },
 
   // ── Retatrutide ────────────────────────────────────────────────────────────
@@ -243,7 +243,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Retatrutide 10mg', 'reta-10'),
+    image: '/products/retatrutide 15mg.png',
   },
   {
     id: 'reta-15',
@@ -265,7 +265,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Retatrutide 15mg', 'reta-15'),
+    image: '/products/retatrutide 15mg.png',
   },
   {
     id: 'reta-30',
@@ -287,7 +287,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Retatrutide 30mg', 'reta-30'),
+    image: '/products/retatrutide 15mg.png',
   },
 
   // ── Glow Peptide Blend ─────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Glow Peptide Blend 70mg', 'glow-70'),
+    image: '/products/glow 70mg.png',
   },
 
   // ── Klow Peptide Blend ─────────────────────────────────────────────────────

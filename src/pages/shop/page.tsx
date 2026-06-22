@@ -2,7 +2,22 @@ import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
 import { products } from '@/mocks/products';
+import type { Product } from '@/mocks/products';
 import ProductCard from '@/pages/home/components/ProductCard';
+
+// Group flat product list by name so multi-dosage products appear as one card.
+function groupProducts(list: Product[]): { primary: Product; variants: Product[] }[] {
+  const byName = new Map<string, Product[]>();
+  for (const p of list) {
+    const arr = byName.get(p.name) ?? [];
+    arr.push(p);
+    byName.set(p.name, arr);
+  }
+  return Array.from(byName.values()).map((variants) => {
+    const sorted = [...variants].sort((a, b) => a.priceMin - b.priceMin);
+    return { primary: sorted[0], variants: sorted };
+  });
+}
 
 const filters = [
   { label: 'All', value: 'all' },
@@ -20,7 +35,7 @@ export default function Shop() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [sortBy, setSortBy] = useState('featured');
 
-  const filteredProducts = useMemo(() => {
+  const filteredGroups = useMemo(() => {
     let result = products;
 
     if (searchQuery.trim()) {
@@ -39,16 +54,18 @@ export default function Shop() {
       result = result.filter((p) => p.subcategory === activeFilter);
     }
 
+    let groups = groupProducts(result);
+
     if (sortBy === 'price-low') {
-      result = [...result].sort((a, b) => a.priceMin - b.priceMin);
+      groups = [...groups].sort((a, b) => a.primary.priceMin - b.primary.priceMin);
     } else if (sortBy === 'price-high') {
-      result = [...result].sort((a, b) => b.priceMax - a.priceMax);
+      groups = [...groups].sort((a, b) => b.primary.priceMax - a.primary.priceMax);
     } else if (sortBy === 'rating') {
-      result = [...result].sort((a, b) => b.rating - a.rating);
+      groups = [...groups].sort((a, b) => b.primary.rating - a.primary.rating);
     }
 
-    return result;
-  }, [activeFilter, sortBy, searchQuery]);
+    return groups;
+  }, [activeFilter, sortBy, searchQuery, categoryParam]);
 
   return (
     <PageLayout>
@@ -131,17 +148,17 @@ export default function Shop() {
 
           {/* Results count */}
           <p className="font-mono text-xs text-saddle mb-6">
-            {filteredProducts.length} products
+            {filteredGroups.length} products
           </p>
 
           {/* Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {filteredGroups.map(({ primary, variants }) => (
+              <ProductCard key={primary.id} product={primary} variants={variants} />
             ))}
           </div>
 
-          {filteredProducts.length === 0 && (
+          {filteredGroups.length === 0 && (
             <div className="text-center py-16">
               <span className="w-12 h-12 flex items-center justify-center text-brass/30 mx-auto mb-4">
                 <i className="ri-search-line text-2xl" />

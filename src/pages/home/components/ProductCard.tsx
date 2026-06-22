@@ -6,6 +6,7 @@ import { sanitizeExcerpt } from '@/utils/sanitizeDescription';
 
 interface ProductCardProps {
   product: Product;
+  variants?: Product[]; // all dosage variants; if omitted defaults to [product]
 }
 
 interface DocPreview {
@@ -209,10 +210,13 @@ function QuickViewModal({
   );
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, variants }: ProductCardProps) {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [quickView, setQuickView] = useState<{ open: boolean; mode: 'tests' | 'coa' }>({ open: false, mode: 'tests' });
+  const allVariants = variants && variants.length > 0 ? variants : [product];
+  const [selected, setSelected] = useState<Product>(allVariants[0]);
+  const isMulti = allVariants.length > 1;
 
   return (
     <div className="group relative parchment-grain brass-double-border bg-parchment hover:border-brass transition-all duration-500 flex flex-col h-full">
@@ -220,19 +224,19 @@ export default function ProductCard({ product }: ProductCardProps) {
       <QuickViewModal
         open={quickView.open}
         mode={quickView.mode}
-        product={product}
+        product={selected}
         onClose={() => setQuickView({ open: false, mode: 'tests' })}
       />
 
       {/* Image Area — clickable */}
       <button
-        onClick={() => navigate(`/product/${product.id}`)}
+        onClick={() => navigate(`/product/${selected.id}`)}
         className="relative aspect-[4/5] overflow-hidden border-b border-brass/20 w-full text-left cursor-pointer"
       >
-        <StockBadge count={product.stockCount} />
+        <StockBadge count={selected.stockCount} />
         <img
-          src={product.image}
-          alt={product.name}
+          src={selected.image}
+          alt={selected.name}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
           loading="lazy"
         />
@@ -241,7 +245,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Purity stamp overlay on image */}
         <div className="absolute bottom-3 right-3 stamp-badge w-10 h-10 opacity-80">
           <span className="text-center leading-tight text-[9px]">
-            {product.purity}
+            {selected.purity}
             <br />
             <span className="text-[7px]">PURITY</span>
           </span>
@@ -249,44 +253,56 @@ export default function ProductCard({ product }: ProductCardProps) {
       </button>
 
       <div className="relative z-10 p-4 md:p-5 flex flex-col flex-1">
-        {/* Top row: monogram + purity removed from top, now on image */}
+        {/* Top row: monogram + rating */}
         <div className="flex items-start justify-between mb-2">
           <div className="w-6 h-6 rounded-full border border-brass/30 flex items-center justify-center">
-            <span className="font-display text-[7px] text-brass/60 tracking-widest">
-              VP
-            </span>
+            <span className="font-display text-[7px] text-brass/60 tracking-widest">VP</span>
           </div>
-          <StarRating rating={product.rating} count={product.reviewCount} />
+          <StarRating rating={selected.rating} count={selected.reviewCount} />
         </div>
 
         {/* Product name — clickable */}
         <button
-          onClick={() => navigate(`/product/${product.id}`)}
+          onClick={() => navigate(`/product/${selected.id}`)}
           className="text-left cursor-pointer"
         >
           <h3 className="font-display text-sm tracking-[0.15em] uppercase text-espresso mb-0.5 hover:text-brass transition-colors">
-            {product.name}
+            {selected.name}
           </h3>
         </button>
 
-        {/* Peptide code italic */}
-        <p className="font-body text-xs italic text-saddle mb-1">
-          {product.peptideCode}
-        </p>
+        {/* Peptide code */}
+        <p className="font-body text-xs italic text-saddle mb-1">{selected.peptideCode}</p>
 
-        {/* CAS number monospaced */}
-        <p className="font-mono text-[10px] text-leather mb-2">
-          CAS: {product.casNumber}
-        </p>
+        {/* CAS */}
+        <p className="font-mono text-[10px] text-leather mb-2">CAS: {selected.casNumber}</p>
 
-        {/* Dosage */}
-        <p className="font-display text-[11px] tracking-wider uppercase text-brass mb-2">
-          {product.dosage}
-        </p>
+        {/* Dosage pills — show selector if multiple variants, plain label if single */}
+        {isMulti ? (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {allVariants.map((v) => (
+              <button
+                key={v.id}
+                onClick={(e) => { e.stopPropagation(); setSelected(v); }}
+                className={`font-mono text-[10px] tracking-wider px-2.5 py-1 border transition-all duration-200 ${
+                  selected.id === v.id
+                    ? 'bg-brass text-espresso border-brass'
+                    : 'bg-transparent text-saddle border-brass/30 hover:border-brass hover:text-espresso'
+                }`}
+              >
+                {v.dosage}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="font-display text-[11px] tracking-wider uppercase text-brass mb-2">
+            {selected.dosage}
+          </p>
+        )}
 
-        {/* Price range */}
+        {/* Price */}
         <p className="font-mono text-base text-espresso font-bold mb-3">
-          ${product.priceMin} – ${product.priceMax}
+          ${selected.priceMin}
         </p>
 
         {/* Links */}
@@ -306,27 +322,27 @@ export default function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Description — sanitized excerpt, hidden on hover to make room */}
+        {/* Description */}
         <p className="font-body text-xs text-saddle/70 leading-relaxed mb-3 flex-1 group-hover:hidden">
-          {sanitizeExcerpt(product.description, 120)}
+          {sanitizeExcerpt(selected.description, 120)}
         </p>
 
-        {/* Research Use Only stamp */}
+        {/* Research Use Only */}
         <div className="border-t border-dashed border-brass/30 pt-3 mb-3">
           <p className="font-mono text-[9px] tracking-[0.1em] uppercase text-saddle/50 text-center">
             ☒ Research Use Only — Not for Human Consumption
           </p>
         </div>
 
-        {/* Add to Cart — ALWAYS VISIBLE for CRO */}
+        {/* Add to Cart */}
         <button
           onClick={() =>
             addItem({
-              id: product.id,
-              name: product.name,
-              peptideCode: product.peptideCode,
-              price: product.priceMin,
-              dosage: product.dosage,
+              id: selected.id,
+              name: `${selected.name} — ${selected.dosage}`,
+              peptideCode: selected.peptideCode,
+              price: selected.priceMin,
+              dosage: selected.dosage,
             })
           }
           className="w-full bg-espresso text-cream font-display text-[11px] tracking-[0.2em] uppercase py-3 border border-espresso hover:bg-brass hover:text-espresso hover:border-brass transition-all duration-300"

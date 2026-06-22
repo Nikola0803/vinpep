@@ -335,7 +335,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Klow Peptide Blend 80mg', 'klow-80'),
+    image: '/products/klow vp.png',
   },
 
   // ── KPV ───────────────────────────────────────────────────────────────────
@@ -383,7 +383,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('MOTS-C 10mg', 'motsc-10'),
+    image: '/products/mot-sc.png',
   },
 
   // ── Tesamorelin ───────────────────────────────────────────────────────────
@@ -407,7 +407,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Tesamorelin 10mg', 'tesa-10'),
+    image: '/products/tesamorelin vp.png',
   },
 
   // ── GHK-Cu ────────────────────────────────────────────────────────────────
@@ -479,7 +479,7 @@ export const products: Product[] = [
     hasCoa: false,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Tesamorelin 20mg', 'tesa-20'),
+    image: '/products/tesamorelin vp.png',
   },
 
   // ── Thymosin Alpha-1 (no COA yet) ─────────────────────────────────────────
@@ -503,7 +503,7 @@ export const products: Product[] = [
     hasCoa: false,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Thymosin Alpha-1 5mg', 'ta1-5'),
+    image: '/products/thymosin alpha 1.png',
   },
 
   // ── Cartalax (no COA yet) ─────────────────────────────────────────────────

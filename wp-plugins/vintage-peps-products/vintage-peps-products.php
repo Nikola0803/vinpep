@@ -4,8 +4,9 @@
  * Plugin URI:   https://vintagepeptides.com
  * Description:  One-click WooCommerce product importer for the confirmed Vintage Peptides
  *               SKU catalog. Creates Simple products with full meta (CAS, purity, dosage,
- *               COA flag, category). Skips existing products by SKU. Safe to re-run.
- * Version:      1.0.0
+ *               COA flag, category) and sideloads product images from the Vercel frontend.
+ *               Skips existing products by SKU. Safe to re-run.
+ * Version:      1.1.0
  * Author:       Velocity72 / Vintage Peptides
  * Requires WC:  6.0
  */
@@ -14,20 +15,13 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+define( 'VP_PRODUCTS_FRONTEND_URL_KEY', 'vp_products_frontend_url' );
+
 // ─── Product Catalog ──────────────────────────────────────────────────────────
 // Source of truth for all SKUs. Mirrors src/mocks/products.ts exactly.
-// Fields:
-//   sku          – unique identifier used to detect duplicates
-//   name         – display name in WC
-//   peptide_code – scientific / systematic name (stored as meta)
-//   cas          – CAS registry number (stored as meta)
-//   dosage       – e.g. "10mg" (stored as meta + appended to name)
-//   purity       – e.g. "99.1%" (stored as meta)
-//   price        – regular price in USD
-//   category     – WC product category slug (created if absent)
-//   description  – long description (research-neutral)
-//   has_coa      – bool; shown in COA badge on product page
-//   featured     – marks product as WC featured
+// image: filename inside public/products/ on the frontend (empty = no image yet).
 
 function vp_products_catalog(): array {
     return [
@@ -43,6 +37,7 @@ function vp_products_catalog(): array {
             'category'     => 'Blends',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'bpc-157 tb-500 blend.png',
             'description'  => 'Synergistic blend of pentadecapeptide BPC-157 and Thymosin Beta-4 fragment for connective tissue, cellular repair, and angiogenesis research. For research use only.',
         ],
         [
@@ -56,6 +51,7 @@ function vp_products_catalog(): array {
             'category'     => 'Blends',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'bpc-157 tb-500 blend.png',
             'description'  => 'Synergistic blend of pentadecapeptide BPC-157 and Thymosin Beta-4 fragment for connective tissue, cellular repair, and angiogenesis research. For research use only.',
         ],
 
@@ -71,6 +67,7 @@ function vp_products_catalog(): array {
             'category'     => 'Blends',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'cjc-1295 ipamorelin blend vp.png',
             'description'  => 'Combined GHRH analog and selective GH secretagogue blend for pituitary axis, growth hormone pulse, and somatotropic signaling research. For research use only.',
         ],
 
@@ -86,6 +83,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'semaglitude 5mg.png',
             'description'  => 'Long-acting GLP-1 analog for metabolic homeostasis, pancreatic beta-cell function, and glycemic regulation research. For research use only.',
         ],
         [
@@ -99,6 +97,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'semaglitude 5mg.png',
             'description'  => 'Long-acting GLP-1 analog for metabolic homeostasis, pancreatic beta-cell function, and glycemic regulation research. For research use only.',
         ],
 
@@ -114,6 +113,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'tirzepaatide 10mg.png',
             'description'  => 'Novel dual incretin receptor agonist activating both GIP and GLP-1 pathways for advanced metabolic signaling research. For research use only.',
         ],
         [
@@ -127,6 +127,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'tirzepaatide 10mg.png',
             'description'  => 'Novel dual incretin receptor agonist activating both GIP and GLP-1 pathways for advanced metabolic signaling research. For research use only.',
         ],
         [
@@ -140,6 +141,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'tirzepaatide 10mg.png',
             'description'  => 'Novel dual incretin receptor agonist activating both GIP and GLP-1 pathways for advanced metabolic signaling research. For research use only.',
         ],
 
@@ -155,6 +157,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => true,
             'has_coa'      => true,
+            'image'        => 'retatrutide 15mg.png',
             'description'  => 'Triple agonist targeting GLP-1, GIP, and glucagon receptors for multi-pathway incretin and energy homeostasis research. For research use only.',
         ],
         [
@@ -168,6 +171,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'retatrutide 15mg.png',
             'description'  => 'Triple agonist targeting GLP-1, GIP, and glucagon receptors for multi-pathway incretin and energy homeostasis research. For research use only.',
         ],
         [
@@ -181,6 +185,7 @@ function vp_products_catalog(): array {
             'category'     => 'GLP-1 Compounds',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'retatrutide 15mg.png',
             'description'  => 'Triple agonist targeting GLP-1, GIP, and glucagon receptors for multi-pathway incretin and energy homeostasis research. For research use only.',
         ],
 
@@ -196,6 +201,7 @@ function vp_products_catalog(): array {
             'category'     => 'Blends',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'glow 70mg.png',
             'description'  => 'Proprietary peptide blend for dermal matrix integrity, collagen synthesis pathway modulation, and extracellular matrix research. For research use only.',
         ],
 
@@ -211,6 +217,7 @@ function vp_products_catalog(): array {
             'category'     => 'Blends',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'klow vp.png',
             'description'  => 'Proprietary peptide compound blend for cellular kinase pathway modulation, signal transduction, and downstream receptor research. For research use only.',
         ],
 
@@ -226,6 +233,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => '',
             'description'  => 'Anti-inflammatory tripeptide α-MSH fragment for mucosal barrier function, NF-κB pathway inhibition, and cytokine signaling research. For research use only.',
         ],
 
@@ -241,6 +249,7 @@ function vp_products_catalog(): array {
             'category'     => 'Bioregulators',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'mot-sc.png',
             'description'  => 'Mitochondrial-derived peptide for AMPK activation, mitochondrial biogenesis, and cellular energy metabolism research. For research use only.',
         ],
 
@@ -256,6 +265,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => 'tesamorelin vp.png',
             'description'  => 'Stabilized GHRH analog for growth hormone axis activation, adipogenesis modulation, and somatotropic signaling research. For research use only.',
         ],
 
@@ -271,6 +281,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => '',
             'description'  => 'Tripeptide-copper complex for wound healing cascade, tissue remodeling, collagen synthesis, and gene expression research. For research use only.',
         ],
 
@@ -286,6 +297,7 @@ function vp_products_catalog(): array {
             'category'     => 'Bioregulators',
             'featured'     => false,
             'has_coa'      => true,
+            'image'        => '',
             'description'  => 'Oxidized coenzyme for mitochondrial electron transport, sirtuin activation, DNA repair, and cellular energy metabolism research. For research use only.',
         ],
 
@@ -301,6 +313,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => false,
+            'image'        => 'tesamorelin vp.png',
             'description'  => 'Stabilized GHRH analog for growth hormone axis activation, adipogenesis modulation, and somatotropic signaling research. For research use only.',
         ],
 
@@ -316,6 +329,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => false,
+            'image'        => 'thymosin alpha 1.png',
             'description'  => 'Thymic bioregulatory peptide for dendritic cell maturation, T-lymphocyte differentiation, and innate immune signaling research. For research use only.',
         ],
 
@@ -331,6 +345,7 @@ function vp_products_catalog(): array {
             'category'     => 'Bioregulators',
             'featured'     => false,
             'has_coa'      => false,
+            'image'        => '',
             'description'  => 'Bioregulatory tripeptide for cartilage extracellular matrix synthesis, proteoglycan expression, and chondrocyte viability research. For research use only.',
         ],
     ];
@@ -353,45 +368,94 @@ function vp_products_admin_menu() {
 // ─── Admin Page ───────────────────────────────────────────────────────────────
 
 function vp_products_admin_page() {
-    $results = [];
+    $results      = [];
+    $img_results  = [];
 
+    // Save settings
+    if ( isset( $_POST['vp_save_settings_nonce'] ) && wp_verify_nonce( $_POST['vp_save_settings_nonce'], 'vp_save_settings' ) ) {
+        $url = esc_url_raw( rtrim( $_POST['vp_frontend_url'] ?? '', '/' ) );
+        update_option( VP_PRODUCTS_FRONTEND_URL_KEY, $url );
+        echo '<div class="notice notice-success is-dismissible"><p>Settings saved.</p></div>';
+    }
+
+    // Import products
     if ( isset( $_POST['vp_import_nonce'] ) && wp_verify_nonce( $_POST['vp_import_nonce'], 'vp_import_products' ) ) {
-        $selected = $_POST['selected_skus'] ?? [];
-        $catalog  = vp_products_catalog();
-
+        $selected    = $_POST['selected_skus'] ?? [];
+        $with_images = ! empty( $_POST['vp_with_images'] );
+        $catalog     = vp_products_catalog();
         foreach ( $catalog as $item ) {
             if ( ! empty( $selected ) && ! in_array( $item['sku'], $selected, true ) ) {
                 continue;
             }
-            $results[] = vp_products_import_one( $item );
+            $results[] = vp_products_import_one( $item, $with_images );
         }
     }
 
-    $catalog = vp_products_catalog();
-    // Pre-check which SKUs already exist
-    $existing = [];
-    foreach ( $catalog as $item ) {
-        $existing[ $item['sku'] ] = wc_get_product_id_by_sku( $item['sku'] ) ?: null;
+    // Set images only (for already-imported products)
+    if ( isset( $_POST['vp_images_nonce'] ) && wp_verify_nonce( $_POST['vp_images_nonce'], 'vp_set_images' ) ) {
+        $catalog = vp_products_catalog();
+        foreach ( $catalog as $item ) {
+            if ( empty( $item['image'] ) ) {
+                continue;
+            }
+            $product_id = wc_get_product_id_by_sku( $item['sku'] );
+            if ( ! $product_id ) {
+                $img_results[] = [ 'sku' => $item['sku'], 'name' => $item['name'], 'status' => 'not_found' ];
+                continue;
+            }
+            $img_results[] = vp_products_set_image( $product_id, $item );
+        }
     }
 
+    $catalog      = vp_products_catalog();
+    $frontend_url = get_option( VP_PRODUCTS_FRONTEND_URL_KEY, 'https://vintagepeptides.com' );
+
+    // Pre-check which SKUs already exist and which have images
+    $existing = [];
+    foreach ( $catalog as $item ) {
+        $pid = wc_get_product_id_by_sku( $item['sku'] ) ?: null;
+        $existing[ $item['sku'] ] = [
+            'wc_id'     => $pid,
+            'has_image' => $pid ? (bool) get_post_thumbnail_id( $pid ) : false,
+        ];
+    }
     ?>
     <div class="wrap">
     <h1 style="display:flex;align-items:center;gap:10px;">
         <span class="dashicons dashicons-archive" style="font-size:26px;color:#b8942a;"></span>
         Vintage Peptides — Product Importer
     </h1>
-    <p style="color:#6b7280;max-width:680px;">
-        Creates WooCommerce Simple products for the confirmed SKU catalog.
-        Products already in WC (matched by SKU) are skipped automatically.
-        Prices and descriptions can be edited in WC after import.
-    </p>
 
+    <?php /* ── Settings ── */ ?>
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px;max-width:680px;">
+        <h2 style="margin-top:0;font-size:15px;">Settings</h2>
+        <form method="post">
+            <?php wp_nonce_field( 'vp_save_settings', 'vp_save_settings_nonce' ); ?>
+            <table class="form-table" style="margin:0;">
+                <tr>
+                    <th style="padding:8px 16px 8px 0;white-space:nowrap;font-weight:600;">Frontend URL</th>
+                    <td>
+                        <input type="url" name="vp_frontend_url" value="<?php echo esc_attr( $frontend_url ); ?>"
+                               style="width:380px;" placeholder="https://vintagepeptides.com">
+                        <p class="description" style="margin-top:4px;">
+                            Base URL where product images are served from
+                            (e.g. <code>https://vintagepeptides.com</code>).<br>
+                            Images are fetched from <code>{url}/products/{filename}</code>.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <button type="submit" class="button button-secondary" style="margin-top:12px;">Save Settings</button>
+        </form>
+    </div>
+
+    <?php /* ── Import results ── */ ?>
     <?php if ( ! empty( $results ) ) : ?>
     <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:24px;">
         <h2 style="margin-top:0;">Import Results</h2>
         <table class="widefat striped">
             <thead>
-                <tr><th>SKU</th><th>Name</th><th>Result</th><th>WC ID</th></tr>
+                <tr><th>SKU</th><th>Name</th><th>Result</th><th>Image</th><th>WC ID</th></tr>
             </thead>
             <tbody>
             <?php foreach ( $results as $r ) : ?>
@@ -404,11 +468,24 @@ function vp_products_admin_page() {
                         <?php elseif ( $r['status'] === 'exists' ) : ?>
                             <span style="color:#6b7280;">— Already exists</span>
                         <?php else : ?>
-                            <span style="color:#dc2626;">✗ Error: <?php echo esc_html( $r['error'] ?? '' ); ?></span>
+                            <span style="color:#dc2626;">✗ <?php echo esc_html( $r['error'] ?? 'Error' ); ?></span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ( $r['wc_id'] ) : ?>
+                        <?php if ( isset( $r['image_status'] ) ) : ?>
+                            <?php if ( $r['image_status'] === 'set' ) : ?>
+                                <span style="color:#16a34a;">✓ Image set</span>
+                            <?php elseif ( $r['image_status'] === 'none' ) : ?>
+                                <span style="color:#9ca3af;">No image file</span>
+                            <?php else : ?>
+                                <span style="color:#f59e0b;"><?php echo esc_html( $r['image_error'] ?? 'Failed' ); ?></span>
+                            <?php endif; ?>
+                        <?php else : ?>
+                            —
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ( ! empty( $r['wc_id'] ) ) : ?>
                             <a href="<?php echo esc_url( get_edit_post_link( $r['wc_id'] ) ); ?>" target="_blank">
                                 #<?php echo esc_html( $r['wc_id'] ); ?>
                             </a>
@@ -421,23 +498,62 @@ function vp_products_admin_page() {
     </div>
     <?php endif; ?>
 
-    <form method="post">
+    <?php /* ── Image-only results ── */ ?>
+    <?php if ( ! empty( $img_results ) ) : ?>
+    <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:24px;">
+        <h2 style="margin-top:0;">Image Sync Results</h2>
+        <table class="widefat striped">
+            <thead>
+                <tr><th>SKU</th><th>Name</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+            <?php foreach ( $img_results as $r ) : ?>
+                <tr>
+                    <td><code><?php echo esc_html( $r['sku'] ); ?></code></td>
+                    <td><?php echo esc_html( $r['name'] ); ?></td>
+                    <td>
+                        <?php if ( $r['status'] === 'set' ) : ?>
+                            <span style="color:#16a34a;font-weight:600;">✓ Image set</span>
+                        <?php elseif ( $r['status'] === 'not_found' ) : ?>
+                            <span style="color:#6b7280;">— Product not in WC yet</span>
+                        <?php elseif ( $r['status'] === 'none' ) : ?>
+                            <span style="color:#9ca3af;">No image file mapped</span>
+                        <?php else : ?>
+                            <span style="color:#dc2626;">✗ <?php echo esc_html( $r['error'] ?? 'Failed' ); ?></span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+
+    <?php /* ── Main form ── */ ?>
+    <form method="post" id="vp-import-form">
         <?php wp_nonce_field( 'vp_import_products', 'vp_import_nonce' ); ?>
 
-        <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;">
-            <button type="submit" name="selected_skus" class="button button-primary"
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+            <button type="submit" class="button button-primary"
                     style="background:#b8942a;border-color:#9a7a20;font-size:14px;height:36px;padding:0 20px;"
-                    onclick="document.querySelectorAll('.vp-sku-cb').forEach(cb => cb.checked = true);">
+                    onclick="selectAll()">
                 Import All
             </button>
-            <button type="submit" class="button" style="height:36px;">
+            <button type="submit" class="button"
+                    style="height:36px;"
+                    onclick="/* submit selected only */">
                 Import Selected
             </button>
-            <span style="color:#6b7280;font-size:13px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;margin-left:4px;">
+                <input type="checkbox" name="vp_with_images" value="1" checked>
+                Include images
+            </label>
+            <span style="color:#6b7280;font-size:13px;margin-left:8px;">
                 <?php
-                $already = count( array_filter( $existing ) );
+                $already = count( array_filter( array_column( $existing, 'wc_id' ) ) );
                 $total   = count( $catalog );
-                echo "{$already} of {$total} SKUs already in WooCommerce";
+                $imaged  = count( array_filter( array_column( $existing, 'has_image' ) ) );
+                echo "{$already}/{$total} in WooCommerce &nbsp;·&nbsp; {$imaged}/{$total} have images";
                 ?>
             </span>
         </div>
@@ -445,26 +561,30 @@ function vp_products_admin_page() {
         <table class="widefat striped">
             <thead>
                 <tr>
-                    <th style="width:30px;"><input type="checkbox" id="vp-select-all"
-                        onchange="document.querySelectorAll('.vp-sku-cb').forEach(cb => cb.checked = this.checked)"></th>
+                    <th style="width:30px;">
+                        <input type="checkbox" id="vp-select-all"
+                               onchange="document.querySelectorAll('.vp-sku-cb').forEach(cb => cb.checked = this.checked)">
+                    </th>
                     <th>SKU</th>
                     <th>Name</th>
                     <th>Category</th>
                     <th>Price</th>
-                    <th>Purity</th>
                     <th>COA</th>
+                    <th>Image</th>
                     <th>WC Status</th>
                 </tr>
             </thead>
             <tbody>
             <?php foreach ( $catalog as $item ) :
-                $wc_id = $existing[ $item['sku'] ] ?? null;
+                $wc_id     = $existing[ $item['sku'] ]['wc_id'] ?? null;
+                $has_image = $existing[ $item['sku'] ]['has_image'] ?? false;
             ?>
                 <tr style="<?php echo $wc_id ? 'opacity:0.55;' : ''; ?>">
                     <td>
                         <input type="checkbox" name="selected_skus[]" class="vp-sku-cb"
                                value="<?php echo esc_attr( $item['sku'] ); ?>"
-                               <?php checked( ! $wc_id ); ?> <?php echo $wc_id ? 'disabled' : ''; ?>>
+                               <?php checked( ! $wc_id ); ?>
+                               <?php echo $wc_id ? 'disabled' : ''; ?>>
                     </td>
                     <td><code style="font-size:11px;"><?php echo esc_html( $item['sku'] ); ?></code></td>
                     <td>
@@ -473,8 +593,18 @@ function vp_products_admin_page() {
                     </td>
                     <td><?php echo esc_html( $item['category'] ); ?></td>
                     <td style="font-family:monospace;">$<?php echo esc_html( $item['price'] ); ?></td>
-                    <td style="font-family:monospace;"><?php echo esc_html( $item['purity'] ); ?></td>
                     <td><?php echo $item['has_coa'] ? '<span style="color:#16a34a;">✓</span>' : '<span style="color:#f59e0b;">Pending</span>'; ?></td>
+                    <td>
+                        <?php if ( ! empty( $item['image'] ) ) : ?>
+                            <?php if ( $has_image ) : ?>
+                                <span style="color:#16a34a;">✓ Set</span>
+                            <?php else : ?>
+                                <span style="color:#6b7280;font-size:11px;"><?php echo esc_html( $item['image'] ); ?></span>
+                            <?php endif; ?>
+                        <?php else : ?>
+                            <span style="color:#d1d5db;font-size:11px;">—</span>
+                        <?php endif; ?>
+                    </td>
                     <td>
                         <?php if ( $wc_id ) : ?>
                             <a href="<?php echo esc_url( get_edit_post_link( $wc_id ) ); ?>" target="_blank"
@@ -488,17 +618,43 @@ function vp_products_admin_page() {
             </tbody>
         </table>
     </form>
+
+    <?php /* ── Set Images Only ── */ ?>
+    <div style="margin-top:20px;">
+        <form method="post">
+            <?php wp_nonce_field( 'vp_set_images', 'vp_images_nonce' ); ?>
+            <button type="submit" class="button"
+                    style="height:36px;"
+                    onclick="return confirm('This will download and set images for all already-imported products. Continue?');">
+                <span class="dashicons dashicons-format-image" style="line-height:1.8;margin-right:4px;"></span>
+                Set Images for All Imported Products
+            </button>
+            <p class="description" style="margin-top:6px;">
+                Use this if products were already imported without images.
+                Downloads each image from <strong><?php echo esc_html( $frontend_url ); ?>/products/…</strong>
+                into the WP media library and sets it as the product thumbnail.
+            </p>
+        </form>
     </div>
+
+    </div>
+
+    <script>
+    function selectAll() {
+        document.querySelectorAll('.vp-sku-cb').forEach(cb => cb.checked = true);
+    }
+    </script>
     <?php
 }
 
 // ─── Import single product ────────────────────────────────────────────────────
 
-function vp_products_import_one( array $item ): array {
+function vp_products_import_one( array $item, bool $with_images = true ): array {
     $base = [
-        'sku'  => $item['sku'],
-        'name' => $item['name'],
-        'wc_id' => null,
+        'sku'          => $item['sku'],
+        'name'         => $item['name'],
+        'wc_id'        => null,
+        'image_status' => null,
     ];
 
     // Skip if SKU already exists
@@ -519,13 +675,11 @@ function vp_products_import_one( array $item ): array {
         $product->set_featured( $item['featured'] );
 
         // Custom meta — read by the React frontend via WC REST API
-        $product->update_meta_data( 'peptide_code', $item['peptide_code'] );
-        $product->update_meta_data( 'cas_number',   $item['cas'] );
-        $product->update_meta_data( 'dosage',        $item['dosage'] );
-        $product->update_meta_data( 'purity',        $item['purity'] );
-        $product->update_meta_data( 'has_coa',       $item['has_coa'] ? '1' : '0' );
-
-        // RUO disclaimer tag
+        $product->update_meta_data( 'peptide_code',   $item['peptide_code'] );
+        $product->update_meta_data( 'cas_number',     $item['cas'] );
+        $product->update_meta_data( 'dosage',         $item['dosage'] );
+        $product->update_meta_data( 'purity',         $item['purity'] );
+        $product->update_meta_data( 'has_coa',        $item['has_coa'] ? '1' : '0' );
         $product->update_meta_data( 'ruo_disclaimer', 'For research use only. Not for human consumption.' );
 
         $product_id = $product->save();
@@ -556,17 +710,59 @@ function vp_products_import_one( array $item ): array {
             'product_tag'
         );
 
-        return array_merge( $base, [ 'status' => 'created', 'wc_id' => $product_id ] );
+        // Sideload product image
+        $img_result = [ 'image_status' => 'none' ];
+        if ( $with_images ) {
+            $img_result = vp_products_set_image( $product_id, $item );
+        }
+
+        return array_merge( $base, [
+            'status'       => 'created',
+            'wc_id'        => $product_id,
+            'image_status' => $img_result['status'] ?? 'none',
+            'image_error'  => $img_result['error'] ?? null,
+        ] );
 
     } catch ( Exception $e ) {
         return array_merge( $base, [ 'status' => 'error', 'error' => $e->getMessage() ] );
     }
 }
 
+// ─── Sideload image for a product ─────────────────────────────────────────────
+// Downloads the image from the Vercel frontend into the WP media library
+// and sets it as the WooCommerce product thumbnail.
+
+function vp_products_set_image( int $product_id, array $item ): array {
+    $base = [ 'sku' => $item['sku'], 'name' => $item['name'] ];
+
+    if ( empty( $item['image'] ) ) {
+        return array_merge( $base, [ 'status' => 'none' ] );
+    }
+
+    $frontend_url = rtrim( get_option( VP_PRODUCTS_FRONTEND_URL_KEY, 'https://vintagepeptides.com' ), '/' );
+    $image_url    = $frontend_url . '/products/' . rawurlencode( $item['image'] );
+
+    // WP media functions needed for sideloading
+    require_once ABSPATH . 'wp-admin/includes/media.php';
+    require_once ABSPATH . 'wp-admin/includes/file.php';
+    require_once ABSPATH . 'wp-admin/includes/image.php';
+
+    $attachment_id = media_sideload_image( $image_url, $product_id, $item['name'], 'id' );
+
+    if ( is_wp_error( $attachment_id ) ) {
+        return array_merge( $base, [
+            'status' => 'error',
+            'error'  => $attachment_id->get_error_message(),
+        ] );
+    }
+
+    set_post_thumbnail( $product_id, $attachment_id );
+
+    return array_merge( $base, [ 'status' => 'set', 'attachment_id' => $attachment_id ] );
+}
+
 // ─── REST endpoint: catalog list ─────────────────────────────────────────────
 // GET /wp-json/vp-products/v1/catalog
-// Returns the canonical product catalog as JSON — useful for syncing
-// the React frontend catalog without touching the WC REST API.
 
 add_action( 'rest_api_init', 'vp_products_register_routes' );
 function vp_products_register_routes() {

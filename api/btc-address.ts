@@ -6,9 +6,11 @@
  * and atomically incremented server-side so each order gets a unique address.
  *
  * Env vars required (Vercel):
- *   VITE_WC_URL        – WooCommerce / WordPress site URL
- *   VITE_WC_KEY        – WooCommerce REST consumer key
- *   VITE_WC_SECRET     – WooCommerce REST consumer secret
+ *   WC_URL          – WordPress site URL (e.g. https://db.vintagepeptides.com)
+ *   WC_USER         – WordPress username (Application Password auth, preferred)
+ *   WC_APP_PASSWORD – WordPress Application Password
+ *   WC_KEY          – WooCommerce consumer key (fallback)
+ *   WC_SECRET       – WooCommerce consumer secret (fallback)
  *
  * WP REST endpoints consumed:
  *   GET  /wp-json/vp-btc/v1/next-index          → { index, address, zpub }
@@ -16,16 +18,19 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { HDKey } from '@scure/bip32';
+import { p2wpkh } from '@scure/btc-signer';
 
-// bip84 is a CommonJS module — use require for compatibility
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const BIP84 = require('bip84');
-
-const WC_URL    = process.env.VITE_WC_URL    ?? '';
-const WC_KEY    = process.env.VITE_WC_KEY    ?? '';
-const WC_SECRET = process.env.VITE_WC_SECRET ?? '';
+const WC_URL        = process.env.WC_URL        || process.env.VITE_WC_URL    || '';
+const WC_USER       = process.env.WC_USER       || '';
+const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
+const WC_KEY        = process.env.WC_KEY        || process.env.VITE_WC_KEY   || '';
+const WC_SECRET     = process.env.WC_SECRET     || process.env.VITE_WC_SECRET || '';
 
 function wcAuth(): string {
+  if (WC_USER && WC_APP_PASSWORD) {
+    return 'Basic ' + Buffer.from(`${WC_USER}:${WC_APP_PASSWORD}`).toString('base64');
+  }
   return 'Basic ' + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString('base64');
 }
 
@@ -65,8 +70,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'invoiceId query param required' });
   }
 
-  if (!WC_URL || !WC_KEY || !WC_SECRET) {
-    return res.status(500).json({ error: 'WooCommerce env vars not configured' });
+  const hasAuth = (WC_USER && WC_APP_PASSWORD) || (WC_KEY && WC_SECRET);
+  if (!WC_URL || !hasAuth) {
+    return res.status(500).json({ error: 'WooCommerce env vars not configured (need WC_URL + WC_USER/WC_APP_PASSWORD or WC_KEY/WC_SECRET)' });
   }
 
   try {
@@ -80,9 +86,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── 2. Derive native SegWit (bc1...) address from zpub + index ───────────
-    //  bip84.fromZPub supports zpub keys directly and returns bc1... addresses
-    const account = new BIP84.fromZPub(zpub);
-    const address: string = account.getAddress(index, false); // false = external chain
+    // zpub uses BIP84 version bytes (0x04b24746). @scure/bip32 accepts custom versions.
+    const ZPUB_VERSIONS = { public: 0x04b24746, private: 0x04b2430c };
+    const hdKey = HDKey.fromExtendedKey(zpub, ZPUB_VERSIONS);
+    const child = hdKey.deriveChild(0).deriveChild(index); // m/0/{index} — external chain
+    if (!child.publicKey) throw new Error('HD derivation produced no public key');
+    const address: string = p2wpkh(child.publicKey).address!;
 
     // ── 3. Register this address with BlockCypher for payment monitoring ──────
     const webhookUrl = `${req.headers['x-forwarded-proto'] ?? 'https'}://${req.headers.host}/api/btc-payment-notify`;

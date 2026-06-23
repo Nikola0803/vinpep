@@ -22,6 +22,7 @@ require_once VPMS_DIR . 'includes/class-vpms-options.php';
 require_once VPMS_DIR . 'includes/class-vpms-rest-api.php';
 require_once VPMS_DIR . 'includes/class-vpms-order-panel.php';
 require_once VPMS_DIR . 'includes/class-vpms-admin.php';
+require_once VPMS_DIR . 'includes/class-vpms-btc.php';
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 add_action( 'plugins_loaded', function () {
@@ -30,6 +31,7 @@ add_action( 'plugins_loaded', function () {
     VPMS_REST_API::init();
     VPMS_Order_Panel::init();
     VPMS_Admin::init();
+    VPMS_BTC::init();
 } );
 
 // ── Activation: flush rewrite rules ───────────────────────────────────────────

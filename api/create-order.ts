@@ -56,6 +56,7 @@ async function resolveSkuIds(sku: string): Promise<{ product_id: number; variati
 interface WcLineItem {
   product_id?: number;
   variation_id?: number;
+  sku?: string;
   name: string;
   quantity: number;
   price: string;
@@ -128,22 +129,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Resolve product_id / variation_id for each line item via the by-sku endpoint.
-    // WooCommerce (v8+) requires product_id on every line item.
-    const resolvedItems = await Promise.all(
-      req.body.line_items.map(async (item: WcLineItem) => {
-        const sku = item.meta_data?.find((m) => m.key === 'peptide_code')?.value;
-        if (!sku) return item;
-        const ids = await resolveSkuIds(sku);
-        if (!ids) {
-          console.warn(`[create-order] SKU not found in WC: ${sku}`);
-          return item;
-        }
-        const resolved: WcLineItem = { ...item, product_id: ids.product_id };
-        if (ids.variation_id) resolved.variation_id = ids.variation_id;
-        return resolved;
-      })
-    );
+    // WooCommerce v8+ requires product_id or sku on every line item.
+    // Extract the SKU from meta_data (stored as peptide_code) and add it
+    // directly — no extra API call needed.
+    const resolvedItems = req.body.line_items.map((item: WcLineItem) => {
+      const sku = item.meta_data?.find((m) => m.key === 'peptide_code')?.value;
+      if (sku && !item.product_id) return { ...item, sku };
+      return item;
+    });
 
     const payload = { ...req.body, line_items: resolvedItems };
 

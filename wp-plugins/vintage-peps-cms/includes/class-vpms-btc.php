@@ -216,7 +216,8 @@ class VPMS_BTC {
             wp_die( 'Unauthorized' );
         }
 
-        $zpub  = sanitize_text_field( $_POST['vpms_btc_zpub'] ?? '' );
+        // Strip all whitespace (spaces, newlines, tabs) — base58 allows none.
+        $zpub  = preg_replace( '/\s+/', '', sanitize_text_field( $_POST['vpms_btc_zpub'] ?? '' ) );
         $index = max( 0, (int) ( $_POST['vpms_btc_next_index'] ?? 0 ) );
 
         update_option( self::OPT_ZPUB, $zpub );

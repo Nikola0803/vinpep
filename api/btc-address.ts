@@ -86,9 +86,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // ── 2. Derive native SegWit (bc1...) address from zpub + index ───────────
+    // Strip any whitespace that may have been introduced when pasting the key.
+    const cleanZpub = zpub.replace(/\s+/g, '');
     // zpub uses BIP84 version bytes (0x04b24746). @scure/bip32 accepts custom versions.
     const ZPUB_VERSIONS = { public: 0x04b24746, private: 0x04b2430c };
-    const hdKey = HDKey.fromExtendedKey(zpub, ZPUB_VERSIONS);
+    const hdKey = HDKey.fromExtendedKey(cleanZpub, ZPUB_VERSIONS);
     const child = hdKey.deriveChild(0).deriveChild(index); // m/0/{index} — external chain
     if (!child.publicKey) throw new Error('HD derivation produced no public key');
     const address: string = p2wpkh(child.publicKey).address!;

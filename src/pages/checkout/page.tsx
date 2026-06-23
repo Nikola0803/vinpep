@@ -190,7 +190,11 @@ async function fetchBtcAddress(invoiceId: string): Promise<{ address: string; in
   const res = await fetch(`/api/btc-address?invoiceId=${encodeURIComponent(invoiceId)}`, {
     signal: AbortSignal.timeout(10_000),
   });
-  if (!res.ok) throw new Error(`BTC address generation failed (${res.status})`);
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try { const j = await res.json(); detail = j.error ?? detail; } catch { /* ignore */ }
+    throw new Error(detail);
+  }
   return res.json();
 }
 
@@ -338,7 +342,8 @@ export default function CheckoutPage() {
         resolvedBtcAddress = address;
         setBtcAddress(address);
       } catch (err) {
-        setSubmitError('Could not generate BTC address. Please try another payment method.');
+        const msg = err instanceof Error ? err.message : String(err);
+        setSubmitError(`BTC address error: ${msg}`);
         setSubmitting(false);
         return;
       }

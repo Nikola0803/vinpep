@@ -15,17 +15,47 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Accept both prefixed and non-prefixed names so old deployments keep working
 const WC_URL = process.env.WC_URL || process.env.VITE_WC_URL || '';
+// Application Password auth — works over HTTP, no OAuth needed.
+// Generate at: WP Admin → Users → your user → Application Passwords
+const WC_USER = process.env.WC_USER || '';
+const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
+// Legacy consumer key/secret kept as fallback
 const WC_KEY = process.env.WC_KEY || process.env.VITE_WC_KEY || '';
 const WC_SECRET = process.env.WC_SECRET || process.env.VITE_WC_SECRET || '';
 
 function wcAuth(): string {
+  if (WC_USER && WC_APP_PASSWORD) {
+    // WordPress Application Password — simple Basic Auth, works over HTTP
+    return 'Basic ' + Buffer.from(`${WC_USER}:${WC_APP_PASSWORD}`).toString('base64');
+  }
+  // Fallback: WooCommerce consumer key/secret (requires HTTPS for query string auth)
   return 'Basic ' + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString('base64');
+}
+
+function wcEndpoint(path: string): string {
+  return `${WC_URL}${path}`;
+}
+
+// Resolve SKU → { product_id, variation_id } via our WP plugin endpoint.
+// Returns nulls if the SKU isn't found — line item is sent without product_id
+// in that case (WC may reject it, but we log and let WC decide).
+async function resolveSkuIds(sku: string): Promise<{ product_id: number; variation_id: number } | null> {
+  try {
+    const url = `${WC_URL}/wp-json/vp-products/v1/by-sku?sku=${encodeURIComponent(sku)}`;
+    const r = await fetch(url, { headers: { Authorization: wcAuth() }, signal: AbortSignal.timeout(5000) });
+    if (!r.ok) return null;
+    const data = await r.json() as { product_id?: number; variation_id?: number };
+    if (!data.product_id) return null;
+    return { product_id: data.product_id, variation_id: data.variation_id ?? 0 };
+  } catch {
+    return null;
+  }
 }
 
 interface WcLineItem {
   product_id?: number;
+  variation_id?: number;
   name: string;
   quantity: number;
   price: string;
@@ -82,8 +112,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!WC_URL || !WC_KEY || !WC_SECRET) {
-    const missing = [!WC_URL && 'WC_URL', !WC_KEY && 'WC_KEY', !WC_SECRET && 'WC_SECRET'].filter(Boolean);
+  const hasAuth = (WC_USER && WC_APP_PASSWORD) || (WC_KEY && WC_SECRET);
+  if (!WC_URL || !hasAuth) {
+    const missing = [
+      !WC_URL && 'WC_URL',
+      !WC_USER && 'WC_USER',
+      !WC_APP_PASSWORD && 'WC_APP_PASSWORD',
+    ].filter(Boolean);
     console.error('[create-order] Missing env vars:', missing.join(', '));
     return res.status(500).json({ error: 'Order service not configured' });
   }
@@ -93,27 +128,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Resolve product_id / variation_id for each line item via the by-sku endpoint.
+    // WooCommerce (v8+) requires product_id on every line item.
+    const resolvedItems = await Promise.all(
+      req.body.line_items.map(async (item: WcLineItem) => {
+        const sku = item.meta_data?.find((m) => m.key === 'peptide_code')?.value;
+        if (!sku) return item;
+        const ids = await resolveSkuIds(sku);
+        if (!ids) {
+          console.warn(`[create-order] SKU not found in WC: ${sku}`);
+          return item;
+        }
+        const resolved: WcLineItem = { ...item, product_id: ids.product_id };
+        if (ids.variation_id) resolved.variation_id = ids.variation_id;
+        return resolved;
+      })
+    );
+
+    const payload = { ...req.body, line_items: resolvedItems };
+
     // AbortSignal.timeout is Node 17.3+ — use a manual controller as fallback
     let signal: AbortSignal | undefined;
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     if (typeof AbortSignal.timeout === 'function') {
-      signal = AbortSignal.timeout(10_000);
+      signal = AbortSignal.timeout(15_000);
     } else {
       const controller = new AbortController();
-      timeoutHandle = setTimeout(() => controller.abort(), 10_000);
+      timeoutHandle = setTimeout(() => controller.abort(), 15_000);
       signal = controller.signal;
     }
 
-    const wcRes = await fetch(`${WC_URL}/wp-json/wc/v3/orders`, {
+    const wcRes = await fetch(wcEndpoint('/wp-json/wc/v3/orders'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: wcAuth(),
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(payload),
       signal,
+      redirect: 'manual', // don't follow redirects — a redirect turns POST into GET
     });
     if (timeoutHandle) clearTimeout(timeoutHandle);
+
+    // Redirect means wrong URL — update WC_URL to the final destination
+    if (wcRes.status >= 300 && wcRes.status < 400) {
+      const location = wcRes.headers.get('location') ?? 'unknown';
+      console.error(`[create-order] WC_URL is redirecting to: ${location} — update WC_URL env var to the final URL`);
+      return res.status(502).json({ error: `WC_URL is redirecting (${wcRes.status}). Set WC_URL to: ${location.replace(/\/wp-json.*/, '')}` });
+    }
 
     if (!wcRes.ok) {
       const errText = await wcRes.text().catch(() => '');

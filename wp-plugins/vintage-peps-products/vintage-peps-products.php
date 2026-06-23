@@ -179,7 +179,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => true,
-            'image'        => '',
+            'image'        => 'kpv.png',
             'description'  => 'Anti-inflammatory tripeptide α-MSH fragment for mucosal barrier function, NF-κB pathway inhibition, and cytokine signaling research. For research use only.',
         ],
 
@@ -211,7 +211,7 @@ function vp_products_catalog(): array {
             'category'     => 'Peptides',
             'featured'     => false,
             'has_coa'      => true,
-            'image'        => '',
+            'image'        => 'ghk-cu.png',
             'description'  => 'Tripeptide-copper complex for wound healing cascade, tissue remodeling, collagen synthesis, and gene expression research. For research use only.',
         ],
 
@@ -227,7 +227,7 @@ function vp_products_catalog(): array {
             'category'     => 'Bioregulators',
             'featured'     => false,
             'has_coa'      => true,
-            'image'        => '',
+            'image'        => 'nad=.png',
             'description'  => 'Oxidized coenzyme for mitochondrial electron transport, sirtuin activation, DNA repair, and cellular energy metabolism research. For research use only.',
         ],
 
@@ -259,7 +259,7 @@ function vp_products_catalog(): array {
             'category'     => 'Bioregulators',
             'featured'     => false,
             'has_coa'      => false,
-            'image'        => '',
+            'image'        => 'cartalax.png',
             'description'  => 'Bioregulatory tripeptide for cartilage extracellular matrix synthesis, proteoglycan expression, and chondrocyte viability research. For research use only.',
         ],
     ];

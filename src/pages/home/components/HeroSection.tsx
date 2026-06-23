@@ -112,9 +112,11 @@ export default function HeroSection() {
               <div className="absolute -inset-5 border border-brass/10 pointer-events-none" />
 
               <img
-                src="https://readdy.ai/api/search-image?query=Elegant%20amber%20glass%20peptide%20research%20vial%20with%20ornate%20brass%20cap%20and%20vintage%20engraved%20label%20on%20aged%20dark%20leather%20surface%2C%20dramatic%20cinematic%20side%20lighting%20with%20warm%20golden%20reflections%2C%20dark%20espresso%20brown%20moody%20atmosphere%2C%20vintage%20apothecary%20laboratory%20aesthetic%2C%20macro%20premium%20product%20photography%2C%20highly%20detailed%2C%20single%20object%20composition&width=700&height=900&seq=hero-vial-dramatic&orientation=portrait"
+                src="http://db.vintagepeptides.com/wp-content/uploads/2026/06/ChatGPT-Image-Jun-23-2026-10_26_13-PM.png"
                 alt="Premium amber peptide research vial"
                 className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
               />
 
               {/* Floating badges */}

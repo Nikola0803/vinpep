@@ -103,12 +103,16 @@ function QuickViewModal({
           {/* Header */}
           <div className="sticky top-0 bg-parchment border-b border-brass/20 p-4 flex items-center justify-between z-10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 border border-brass/20 overflow-hidden flex-shrink-0">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover object-center"
-                />
+              <div className="w-10 h-10 border border-brass/20 overflow-hidden flex-shrink-0 bg-brass/10">
+                {product.image && (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover object-center"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
               </div>
               <div>
                 <h3 className="font-display text-xs tracking-[0.15em] uppercase text-espresso">
@@ -268,12 +272,21 @@ export default function ProductCard({ product, variants }: ProductCardProps) {
         className="relative aspect-[4/5] overflow-hidden border-b border-brass/20 w-full text-left cursor-pointer"
       >
         <StockBadge count={selected.stockCount} />
-        <img
-          src={selected.image}
-          alt={selected.name}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
-          loading="lazy"
-        />
+        {selected.image ? (
+          <img
+            src={selected.image}
+            alt={selected.name}
+            className="w-full h-full object-cover object-center group-hover:scale-105"
+            style={{ opacity: 0, transition: 'opacity 0.5s ease, transform 0.7s ease' }}
+            loading="lazy"
+            decoding="async"
+            onLoad={(e) => { e.currentTarget.style.opacity = '1'; }}
+          />
+        ) : (
+          <div className="w-full h-full bg-brass/10 flex items-center justify-center">
+            <i className="ri-flask-line text-brass/30 text-4xl" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-espresso/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
         {/* Purity stamp overlay on image */}

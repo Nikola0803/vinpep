@@ -2,21 +2,23 @@
  * POST /api/create-order
  *
  * Server-side proxy for creating a WooCommerce order. Keeps the WC REST
- * consumer key/secret out of the browser bundle — the frontend used to call
- * WooCommerce directly with VITE_WC_KEY / VITE_WC_SECRET, which ships those
- * credentials to every visitor's JS. This endpoint holds the only copy.
+ * consumer key/secret out of the browser bundle.
  *
- * Env vars required (Vercel):
- *   VITE_WC_URL    – WooCommerce / WordPress site URL
- *   VITE_WC_KEY    – WooCommerce REST consumer key
- *   VITE_WC_SECRET – WooCommerce REST consumer secret
+ * Env vars required (Vercel dashboard → Settings → Environment Variables):
+ *   WC_URL    – WooCommerce / WordPress site URL  (e.g. https://vintagepeptides.com)
+ *   WC_KEY    – WooCommerce REST consumer key     (starts with ck_)
+ *   WC_SECRET – WooCommerce REST consumer secret  (starts with cs_)
+ *
+ * Legacy aliases also accepted (VITE_WC_URL / VITE_WC_KEY / VITE_WC_SECRET).
+ * Prefer the non-VITE_ names so Vite doesn't embed them in the client bundle.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const WC_URL = process.env.VITE_WC_URL ?? '';
-const WC_KEY = process.env.VITE_WC_KEY ?? '';
-const WC_SECRET = process.env.VITE_WC_SECRET ?? '';
+// Accept both prefixed and non-prefixed names so old deployments keep working
+const WC_URL = process.env.WC_URL || process.env.VITE_WC_URL || '';
+const WC_KEY = process.env.WC_KEY || process.env.VITE_WC_KEY || '';
+const WC_SECRET = process.env.WC_SECRET || process.env.VITE_WC_SECRET || '';
 
 function wcAuth(): string {
   return 'Basic ' + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString('base64');
@@ -81,7 +83,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (!WC_URL || !WC_KEY || !WC_SECRET) {
-    console.error('[create-order] WooCommerce env vars not configured');
+    const missing = [!WC_URL && 'WC_URL', !WC_KEY && 'WC_KEY', !WC_SECRET && 'WC_SECRET'].filter(Boolean);
+    console.error('[create-order] Missing env vars:', missing.join(', '));
     return res.status(500).json({ error: 'Order service not configured' });
   }
 
@@ -90,6 +93,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // AbortSignal.timeout is Node 17.3+ — use a manual controller as fallback
+    let signal: AbortSignal | undefined;
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    if (typeof AbortSignal.timeout === 'function') {
+      signal = AbortSignal.timeout(10_000);
+    } else {
+      const controller = new AbortController();
+      timeoutHandle = setTimeout(() => controller.abort(), 10_000);
+      signal = controller.signal;
+    }
+
     const wcRes = await fetch(`${WC_URL}/wp-json/wc/v3/orders`, {
       method: 'POST',
       headers: {
@@ -97,14 +111,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         Authorization: wcAuth(),
       },
       body: JSON.stringify(req.body),
-      signal: AbortSignal.timeout(10_000),
+      signal,
     });
+    if (timeoutHandle) clearTimeout(timeoutHandle);
 
     if (!wcRes.ok) {
-      const err = await wcRes.json().catch(() => ({}));
-      console.error('[create-order] WC error', wcRes.status, err);
+      const errText = await wcRes.text().catch(() => '');
+      let err: { message?: string; code?: string } = {};
+      try { err = JSON.parse(errText); } catch { /* not JSON */ }
+      console.error(`[create-order] WC HTTP ${wcRes.status}:`, err.code, err.message, errText.slice(0, 300));
       return res.status(502).json({
-        error: (err as { message?: string })?.message || `WooCommerce error ${wcRes.status}`,
+        error: err.message || `WooCommerce error ${wcRes.status}`,
       });
     }
 

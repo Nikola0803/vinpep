@@ -78,7 +78,7 @@ export default function ReturnPolicy() {
               </p>
               <div className="space-y-3">
                 {[
-                  { step: '1', title: 'Contact Support', desc: 'Email research@vintagepeptides.com or call 1-800-VP-PEP-1 with your order number and reason for return.' },
+                  { step: '1', title: 'Contact Support', desc: 'Email research@vintagepeptides.com or call (866) 788-GLP1 with your order number and reason for return.' },
                   { step: '2', title: 'Await Approval', desc: 'Our team will review your request and respond within 2 business days with return authorization and instructions.' },
                   { step: '3', title: 'Ship the Product', desc: 'Package the unopened product securely in its original packaging with all documentation. Include the return authorization form.' },
                   { step: '4', title: 'Inspection & Refund', desc: 'Once received, we inspect the product. Approved returns are processed within 5-7 business days.' },
@@ -170,7 +170,7 @@ export default function ReturnPolicy() {
                     research@vintagepeptides.com
                   </a>
                 </p>
-                <p>1-800-VP-PEP-1</p>
+                <p>(866) 788-GLP1</p>
                 <p className="text-xs text-saddle/60 mt-1">Mon – Fri: 9:00 AM – 6:00 PM EST</p>
               </div>
             </div>

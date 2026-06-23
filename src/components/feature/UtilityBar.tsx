@@ -8,13 +8,13 @@ export default function UtilityBar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-6 text-xs font-body tracking-wide">
           <a
-            href="tel:+18001234567"
+            href="tel:+18667884571"
             className="flex items-center gap-2 hover:text-brass transition-colors whitespace-nowrap"
           >
             <span className="w-4 h-4 flex items-center justify-center">
               <i className="ri-phone-line text-xs" />
             </span>
-            1-800-VP-PEP-1
+            (866) 788-GLP1
           </a>
           <a
             href="mailto:research@vintagepeptides.com"

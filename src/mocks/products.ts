@@ -359,7 +359,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('KPV 10mg', 'kpv-10'),
+    image: '/products/kpv.png',
   },
 
   // ── MOTS-C ────────────────────────────────────────────────────────────────
@@ -431,7 +431,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('GHK-Cu 50mg', 'ghkcu-50', 'blue-tinted'),
+    image: '/products/ghk-cu.png',
   },
 
   // ── NAD+ ──────────────────────────────────────────────────────────────────
@@ -455,7 +455,7 @@ export const products: Product[] = [
     hasCoa: true,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('NAD+ 500mg', 'nad-500'),
+    image: '/products/nad=.png',
   },
 
   // ── Tesamorelin 20mg (no COA yet) ─────────────────────────────────────────
@@ -527,7 +527,7 @@ export const products: Product[] = [
     hasCoa: false,
     coaUrl: '#',
     testUrl: '#',
-    image: vialImg('Cartalax 20mg', 'carta-20'),
+    image: '/products/cartalax.png',
   },
 ];
 

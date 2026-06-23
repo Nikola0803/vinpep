@@ -182,7 +182,7 @@ export default function PrivacyPolicy() {
                     research@vintagepeptides.com
                   </a>
                 </p>
-                <p>1-800-VP-PEP-1</p>
+                <p>(866) 788-GLP1</p>
               </div>
             </div>
 

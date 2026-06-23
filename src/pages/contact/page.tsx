@@ -43,7 +43,7 @@ export default function Contact() {
                   </span>
                   <div>
                     <p className="text-espresso font-medium">Research Support</p>
-                    <p>1-800-VP-PEP-1</p>
+                    <p>(866) 788-GLP1</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

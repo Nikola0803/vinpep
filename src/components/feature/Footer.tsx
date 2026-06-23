@@ -104,7 +104,7 @@ export default function Footer() {
                 <span className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-phone-line text-xs text-brass" />
                 </span>
-                1-800-VP-PEP-1
+                (866) 788-GLP1
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-4 h-4 flex items-center justify-center">

@@ -31,17 +31,20 @@ class VPMS_Order_Panel {
             return;
         }
 
-        $orders = wc_get_orders( [
-            'status'     => [ 'pending' ],
-            'limit'      => 100,
-            'orderby'    => 'date',
-            'order'      => 'DESC',
-            'meta_query' => [ [
-                'key'     => '_payment_method',
-                'value'   => [ 'zelle', 'cashapp', 'venmo' ],
-                'compare' => 'IN',
-            ] ],
+        // Fetch all pending orders — meta_query on _payment_method doesn't work
+        // with WooCommerce HPOS (payment method is in wc_orders table, not post meta).
+        $all_orders = wc_get_orders( [
+            'status'  => [ 'pending' ],
+            'limit'   => 100,
+            'orderby' => 'date',
+            'order'   => 'DESC',
         ] );
+
+        // Filter client-side to only manual payment methods
+        $manual_methods = [ 'zelle', 'cashapp', 'venmo', 'btc', 'usdc', 'usdt' ];
+        $orders = array_values( array_filter( $all_orders, fn( $o ) =>
+            in_array( $o->get_payment_method(), $manual_methods, true ) || ! $o->get_payment_method()
+        ) );
 
         ?>
         <div class="wrap">
@@ -71,6 +74,9 @@ class VPMS_Order_Panel {
                             'zelle'   => '<span style="background:#6d1ed4;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">Zelle</span>',
                             'cashapp' => '<span style="background:#00c244;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">Cash App</span>',
                             'venmo'   => '<span style="background:#3d95ce;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">Venmo</span>',
+                            'btc'     => '<span style="background:#f7931a;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">Bitcoin</span>',
+                            'usdc'    => '<span style="background:#2775ca;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">USDC</span>',
+                            'usdt'    => '<span style="background:#26a17b;color:#fff;padding:2px 8px;border-radius:3px;font-size:11px;">USDT</span>',
                             default   => esc_html( $order->get_payment_method_title() ),
                         };
                         $items_summary = implode( ', ', array_map(
@@ -90,7 +96,7 @@ class VPMS_Order_Panel {
                             <small><?php echo esc_html( $order->get_billing_phone() ); ?></small>
                         </td>
                         <td><?php echo $badge; ?></td>
-                        <td><strong><?php echo esc_html( wc_price( $order->get_total() ) ); ?></strong></td>
+                        <td><strong><?php echo wc_price( $order->get_total() ); ?></strong></td>
                         <td><?php echo esc_html( $order->get_date_created() ? $order->get_date_created()->date( 'M j, Y g:i a' ) : '—' ); ?></td>
                         <td style="font-size:12px;"><?php echo esc_html( $items_summary ); ?></td>
                         <td>

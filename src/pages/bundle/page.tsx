@@ -2,7 +2,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
 import { useCart } from '@/context/CartContext';
 import { bundles, getBundleProducts } from '@/mocks/bundles';
-import { products } from '@/mocks/products';
 import { useState, useMemo } from 'react';
 
 const tabs = [

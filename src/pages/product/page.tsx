@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
 import { useCart } from '@/context/CartContext';
-import { products } from '@/mocks/products';
+import { useProducts } from '@/hooks/useProducts';
 import { coaEntries } from '@/mocks/coa';
 import { useState, useMemo } from 'react';
 import ProductCard from '@/pages/home/components/ProductCard';
@@ -45,6 +45,7 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCart();
+  const { products, loading } = useProducts();
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDosage, setSelectedDosage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -58,15 +59,24 @@ export default function ProductDetail() {
     const sameCategory = products.filter(
       (p) => p.id !== product.id && p.subcategory === product.subcategory
     );
-    if (sameCategory.length >= 4) {
-      return sameCategory.slice(0, 4);
-    }
-    // Fill with popular products
+    if (sameCategory.length >= 4) return sameCategory.slice(0, 4);
     const others = products.filter(
       (p) => p.id !== product.id && !sameCategory.includes(p)
     );
     return [...sameCategory, ...others].slice(0, 4);
-  }, [product]);
+  }, [product, products]);
+
+  if (loading) {
+    return (
+      <PageLayout>
+        <div className="py-24 text-center parchment-grain">
+          <div className="relative z-10">
+            <p className="font-mono text-sm text-saddle animate-pulse tracking-widest uppercase">Loading…</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (!product) {
     return (

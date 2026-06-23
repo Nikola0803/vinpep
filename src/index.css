@@ -5,6 +5,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-size: 18px; /* root scale — all rem-based Tailwind sizes inherit this */
   }
   body {
     font-family: 'Lora', serif;
@@ -16,7 +17,7 @@
     background-size: 200px 200px, 100% 100%;
     background-attachment: fixed, fixed;
     line-height: 1.75;
-    font-size: 17px;
+    font-size: 1rem;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -176,3 +177,13 @@
     text-shadow: 0 0 20px rgba(184, 148, 42, 0.3);
   }
 }
+
+/* ─── Readability lift ────────────────────────────────────────────────────────
+   Unlayered rules sit above all @layer styles in the CSS cascade,
+   so these override Tailwind's hardcoded arbitrary-value utilities without
+   needing !important. Bump all tiny px classes to comfortable reading sizes.
+   ─────────────────────────────────────────────────────────────────────────── */
+[class*="text-[9px]"]  { font-size: 12px; line-height: 1.6; }
+[class*="text-[10px]"] { font-size: 13px; line-height: 1.6; }
+[class*="text-[11px]"] { font-size: 14px; line-height: 1.6; }
+[class*="text-[12px]"] { font-size: 14px; line-height: 1.6; }

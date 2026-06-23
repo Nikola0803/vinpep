@@ -113,7 +113,7 @@ const PAYMENT_METHODS = [
     handle: '$VVGOps',
     displayEntity: 'Vintage Vitality',
     icon: 'ri-money-dollar-circle-line',
-    instruction: 'Send to $VVGOps — leave the memo/notes field completely blank.',
+    instruction: 'Send to $VVGOps — enter only your memo code in the notes field.',
     disabled: false,
   },
   {
@@ -122,7 +122,7 @@ const PAYMENT_METHODS = [
     handle: '@VVGOps',
     displayEntity: 'Vintage Vitality',
     icon: 'ri-wallet-3-line',
-    instruction: 'Send to @VVGOps — leave the memo/notes field completely blank.',
+    instruction: 'Send to @VVGOps — enter only your memo code in the notes field.',
     disabled: false,
   },
   {
@@ -131,7 +131,25 @@ const PAYMENT_METHODS = [
     handle: 'VintageVitality',
     displayEntity: 'Vintage Vitality',
     icon: 'ri-bank-card-line',
-    instruction: 'Send payment to VintageVitality via Zelle.',
+    instruction: 'Send to VintageVitality via Zelle — enter only your memo code in the notes field.',
+    disabled: false,
+  },
+  {
+    id: 'usdc',
+    name: 'USDC (Stablecoin)',
+    handle: 'usdc',
+    displayEntity: '',
+    icon: 'ri-coins-line',
+    instruction: 'Send USDC on Ethereum (ERC-20) or Solana (SPL) — choose network after selecting.',
+    disabled: false,
+  },
+  {
+    id: 'usdt',
+    name: 'USDT (Tether)',
+    handle: 'usdt',
+    displayEntity: '',
+    icon: 'ri-coin-line',
+    instruction: 'Send USDT on Ethereum (ERC-20) or Solana (SPL) — choose network after selecting.',
     disabled: false,
   },
   {
@@ -151,6 +169,19 @@ const VALID_COUPONS: Record<string, { type: 'flat' | 'percent'; value: number; l
   LAUNCH10: { type: 'percent', value: 10, label: '10% off' },
   RESEARCH15: { type: 'percent', value: 15, label: '15% off' },
   SAVE20: { type: 'flat', value: 20, label: '$20 off' },
+};
+
+// ─── Crypto stablecoin addresses ─────────────────────────────────────────────
+
+const CRYPTO_ADDRESSES: Record<string, Record<'eth' | 'sol', string>> = {
+  usdc: {
+    eth: '0xf751e21093e7aD4Da07039A6Cd1581132C5f03A1',
+    sol: 'H3GvD8jnDMCWmQb5njWXfEG4rWWUnXHswcUfFo3oGEdM',
+  },
+  usdt: {
+    eth: '0xf751e21093e7aD4Da07039A6Cd1581132C5f03A1',
+    sol: 'H3GvD8jnDMCWmQb5njWXfEG4rWWUnXHswcUfFo3oGEdM',
+  },
 };
 
 // ─── BTC address fetch ────────────────────────────────────────────────────────
@@ -226,6 +257,8 @@ export default function CheckoutPage() {
   const [btcAddress, setBtcAddress] = useState<string | null>(null);
   const [btcAmountSats, setBtcAmountSats] = useState<number | null>(null);
   const [btcPriceUsd, setBtcPriceUsd] = useState<number | null>(null);
+  const [cryptoNetwork, setCryptoNetwork] = useState<'eth' | 'sol'>('eth');
+  const [cryptoAddress, setCryptoAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const wcOrderIdRef = useRef<number | null>(null);
@@ -234,6 +267,7 @@ export default function CheckoutPage() {
 
   const shipping = totalPrice >= 200 ? 0 : 15;
   const isBtc = selectedPayment === 'btc';
+  const isCrypto = selectedPayment === 'usdc' || selectedPayment === 'usdt';
   const btcDiscount = isBtc ? parseFloat(((totalPrice * 5) / 100).toFixed(2)) : 0;
   let couponDiscount = 0;
   if (appliedCoupon) {
@@ -284,12 +318,16 @@ export default function CheckoutPage() {
     const method = PAYMENT_METHODS.find((p) => p.id === selectedPayment)!;
 
     // Assign next worker in rotation for P2P payments (Cash App / Venmo / Zelle).
-    // BTC gets its own address per order — no worker rotation needed.
+    // BTC and crypto stablecoins use fixed addresses — no worker rotation needed.
     const isP2P = ['cashapp', 'venmo', 'zelle'].includes(selectedPayment);
     const assignment = isP2P
       ? await assignWorker(selectedPayment as 'zelle' | 'cashapp' | 'venmo')
       : null;
-    const resolvedHandle  = assignment?.handle ?? method.handle;
+    const resolvedCryptoAddress = isCrypto
+      ? (CRYPTO_ADDRESSES[selectedPayment]?.[cryptoNetwork] ?? null)
+      : null;
+    if (resolvedCryptoAddress) setCryptoAddress(resolvedCryptoAddress);
+    const resolvedHandle = resolvedCryptoAddress ?? assignment?.handle ?? method.handle;
     const assignedWorker  = assignment ? { id: assignment.workerId, name: assignment.workerName } : null;
 
     // For BTC — generate unique HD-wallet address for this order
@@ -352,8 +390,22 @@ export default function CheckoutPage() {
         ...(assignedWorker ? [{ key: 'assigned_worker_id', value: assignedWorker.id }] : []),
         ...(resolvedBtcAddress ? [{ key: 'btc_address', value: resolvedBtcAddress }] : []),
         ...(btcAmountSats ? [{ key: 'btc_amount_sats', value: String(btcAmountSats) }] : []),
+        ...(resolvedCryptoAddress ? [
+          { key: 'crypto_token', value: selectedPayment.toUpperCase() },
+          { key: 'crypto_network', value: cryptoNetwork },
+          { key: 'crypto_address', value: resolvedCryptoAddress },
+        ] : []),
         ...(formData.institution ? [{ key: 'institution', value: formData.institution }] : []),
         ...(formData.notes ? [{ key: 'order_notes', value: formData.notes }] : []),
+        // Subscribe & Save — present when any cart item has a subscribeInterval
+        ...(() => {
+          const subItem = items.find((i) => i.subscribeInterval);
+          if (!subItem) return [];
+          return [
+            { key: 'subscription_interval', value: String(subItem.subscribeInterval) },
+            { key: 'subscription_discount_pct', value: String(subItem.subscriptionDiscountPct ?? 0) },
+          ];
+        })(),
       ],
       status: 'pending',
     };
@@ -508,7 +560,50 @@ export default function CheckoutPage() {
                     {method.name} — Payment Instructions
                   </h3>
 
-                  {confirmedOrder.paymentMethod === 'btc' ? (
+                  {(confirmedOrder.paymentMethod === 'usdc' || confirmedOrder.paymentMethod === 'usdt') ? (
+                    <>
+                      <p className="font-body text-xs text-saddle/70 mb-3 leading-relaxed">
+                        Send exactly{' '}
+                        <strong>${confirmedOrder.total.toFixed(2)} {confirmedOrder.paymentMethod.toUpperCase()}</strong>{' '}
+                        to the address below on <strong>{cryptoNetwork === 'eth' ? 'Ethereum (ERC-20)' : 'Solana (SPL)'}</strong>.
+                        Your order will be marked Paid once we verify the transaction.
+                      </p>
+                      <div className="p-3 bg-espresso/5 border border-brass/20 mb-3 break-all">
+                        <p className="font-mono text-[10px] text-saddle/50 mb-1 uppercase tracking-wider">
+                          {confirmedOrder.paymentMethod.toUpperCase()} Address — {cryptoNetwork === 'eth' ? 'Ethereum' : 'Solana'}
+                        </p>
+                        <p className="font-mono text-xs text-espresso font-bold">
+                          {cryptoAddress ?? confirmedOrder.paymentHandle}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 p-3 bg-brass/5 border border-brass/20 mb-3">
+                        <span className="font-mono text-xs text-saddle">Send exactly:</span>
+                        <span className="font-mono text-lg text-brass font-bold">
+                          ${confirmedOrder.total.toFixed(2)} {confirmedOrder.paymentMethod.toUpperCase()}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const addr = cryptoAddress ?? confirmedOrder.paymentHandle;
+                          navigator.clipboard.writeText(addr).then(() => {
+                            setCopied(true);
+                            setTimeout(() => setCopied(false), 2000);
+                          });
+                        }}
+                        className="w-full flex items-center justify-center gap-2 py-2 border border-brass/30 hover:bg-brass/10 transition-colors mb-3"
+                      >
+                        <i className={copied ? 'ri-check-line text-green-700' : 'ri-file-copy-line text-brass'} />
+                        <span className="font-mono text-[10px] tracking-wider uppercase text-espresso">
+                          {copied ? 'Copied!' : `Copy ${confirmedOrder.paymentMethod.toUpperCase()} Address`}
+                        </span>
+                      </button>
+                      <p className="font-mono text-[10px] text-saddle/60 leading-relaxed">
+                        After sending, email your transaction hash to{' '}
+                        <strong>orders@vintagepeptides.com</strong>{' '}
+                        with order <strong>#{confirmedOrder.wcOrderId}</strong> for faster verification.
+                      </p>
+                    </>
+                  ) : confirmedOrder.paymentMethod === 'btc' ? (
                     <>
                       <p className="font-body text-xs text-saddle/70 mb-3 leading-relaxed">
                         Send Bitcoin to the address below. The exact amount in BTC is calculated at current market rate. Your order is automatically marked <strong>Paid</strong> once the network confirms.
@@ -552,15 +647,26 @@ export default function CheckoutPage() {
                     </>
                   ) : (
                     <>
-                      <p className="font-body text-sm text-saddle leading-relaxed mb-2">
+                      <p className="font-body text-sm text-saddle leading-relaxed mb-3">
                         Send payment to:{' '}
                         <span className="font-mono text-brass font-bold">
                           {confirmedOrder.paymentHandle}
                         </span>
                       </p>
-                      <p className="font-body text-xs italic text-saddle/60 mb-1">
-                        Leave the memo / notes field <strong>completely blank</strong> — our system auto-matches your payment by order code.
-                      </p>
+
+                      {/* Memo code instruction */}
+                      <div className="p-3 border border-brass/40 bg-brass/5 mb-3">
+                        <p className="font-display text-[9px] tracking-[0.25em] uppercase text-saddle mb-1">
+                          Memo / Notes Field — Enter This Code Only
+                        </p>
+                        <p className="font-mono text-2xl tracking-[0.5em] text-brass font-bold">
+                          {confirmedOrder.memoCode}
+                        </p>
+                        <p className="font-mono text-[10px] text-saddle/60 mt-1.5">
+                          Enter only this code in the notes or memo field — nothing else. Our system auto-verifies your payment by code. Any extra text may delay matching.
+                        </p>
+                      </div>
+
                       <p className="font-mono text-[10px] text-saddle/50 mb-3">
                         Payments process under our parent entity <strong>Vintage Vitality</strong>.
                       </p>
@@ -568,9 +674,6 @@ export default function CheckoutPage() {
                         <span className="font-mono text-xs text-saddle">Send exactly:</span>
                         <span className="font-mono text-lg text-brass font-bold">
                           ${confirmedOrder.total.toFixed(2)}
-                        </span>
-                        <span className="ml-auto font-mono text-xs tracking-[0.3em] text-brass font-bold">
-                          Ref: {confirmedOrder.memoCode}
                         </span>
                       </div>
                     </>
@@ -775,8 +878,8 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
-                  {/* Cash App / Venmo — parent entity + blank memo disclosure */}
-                  {(selectedPayment === 'cashapp' || selectedPayment === 'venmo') && (
+                  {/* P2P — memo code + entity disclosure */}
+                  {(selectedPayment === 'cashapp' || selectedPayment === 'venmo' || selectedPayment === 'zelle') && (
                     <div className="mt-3 p-3 border border-brass/20 bg-cream/60 space-y-2">
                       <p className="font-mono text-[10px] text-saddle/80 leading-relaxed">
                         <i className="ri-information-line text-brass mr-1" />
@@ -784,7 +887,41 @@ export default function CheckoutPage() {
                       </p>
                       <p className="font-mono text-[10px] text-saddle/80 leading-relaxed">
                         <i className="ri-error-warning-line text-brass mr-1" />
-                        <strong>Please leave the memo / notes field completely blank</strong> inside the app. Our system uses your order code to auto-match your payment — any text in the memo can cause a processing delay.
+                        <strong>Enter only your memo code in the notes / memo field</strong> — nothing else. Our system auto-verifies payments by code. Any additional text may cause a matching delay.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* USDC / USDT — network selector */}
+                  {isCrypto && (
+                    <div className="mt-3 p-3 border border-brass/20 bg-cream/60 space-y-3">
+                      <p className="font-mono text-[10px] text-saddle/80 leading-relaxed">
+                        <i className="ri-coins-line text-brass mr-1" />
+                        Send {selectedPayment.toUpperCase()} directly from your wallet. Select your preferred network:
+                      </p>
+                      <div className="flex gap-2">
+                        {(['eth', 'sol'] as const).map((net) => (
+                          <button key={net} type="button"
+                            onClick={() => setCryptoNetwork(net)}
+                            className={`flex-1 py-2 font-mono text-[10px] tracking-wider uppercase border transition-colors ${
+                              cryptoNetwork === net
+                                ? 'border-brass bg-brass/10 text-brass'
+                                : 'border-brass/30 text-saddle/60 hover:border-brass/50'
+                            }`}>
+                            {net === 'eth' ? 'Ethereum (ERC-20)' : 'Solana (SPL)'}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="p-2 bg-espresso/5 border border-brass/20 break-all">
+                        <p className="font-mono text-[9px] text-saddle/50 mb-1 uppercase tracking-wider">
+                          {selectedPayment.toUpperCase()} Wallet — {cryptoNetwork === 'eth' ? 'Ethereum' : 'Solana'}
+                        </p>
+                        <p className="font-mono text-[10px] text-espresso font-bold">
+                          {CRYPTO_ADDRESSES[selectedPayment]?.[cryptoNetwork]}
+                        </p>
+                      </div>
+                      <p className="font-mono text-[10px] text-saddle/60 leading-relaxed">
+                        After sending, email your transaction hash to <strong>orders@vintagepeptides.com</strong> for fast verification.
                       </p>
                     </div>
                   )}

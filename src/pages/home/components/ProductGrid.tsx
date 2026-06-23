@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { products } from '../../../mocks/products';
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from './ProductCard';
 
 const filters = [
@@ -12,12 +12,13 @@ const filters = [
 ];
 
 export default function ProductGrid() {
+  const { products, loading, error } = useProducts();
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filteredProducts = useMemo(() => {
     if (activeFilter === 'all') return products;
     return products.filter((p) => p.subcategory === activeFilter);
-  }, [activeFilter]);
+  }, [activeFilter, products]);
 
   return (
     <section id="catalog" className="py-16 md:py-24 parchment-grain">
@@ -47,11 +48,23 @@ export default function ProductGrid() {
         </div>
 
         {/* Product grid — max 8 on homepage */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-          {filteredProducts.slice(0, 8).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="border border-brass/20 bg-cream/40 h-80 animate-pulse" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="font-mono text-sm text-red-800/70">Could not load catalog — {error}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            {filteredProducts.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
 
         {filteredProducts.length > 8 && (
           <div className="text-center mt-10">

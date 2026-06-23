@@ -8,6 +8,9 @@ export interface CartItem {
   dosage: string;
   quantity: number;
   imageUrl?: string;
+  // Subscribe & Save
+  subscribeInterval?: 30 | 60 | 90 | 180; // days between renewals; undefined = one-time
+  subscriptionDiscountPct?: number;         // e.g. 10 = 10% off
 }
 
 interface CartContextType {

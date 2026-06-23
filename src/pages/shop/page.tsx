@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
-import { products } from '@/mocks/products';
 import type { Product } from '@/mocks/products';
+import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/pages/home/components/ProductCard';
 
 // Group flat product list by name so multi-dosage products appear as one card.
@@ -28,6 +28,7 @@ const filters = [
 ];
 
 export default function Shop() {
+  const { products, loading, error } = useProducts();
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const categoryParam = searchParams.get('category') || '';
@@ -148,15 +149,27 @@ export default function Shop() {
 
           {/* Results count */}
           <p className="font-mono text-xs text-saddle mb-6">
-            {filteredGroups.length} products
+            {loading ? 'Loading…' : `${filteredGroups.length} products`}
           </p>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-            {filteredGroups.map(({ primary, variants }) => (
-              <ProductCard key={primary.id} product={primary} variants={variants} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="border border-brass/20 bg-cream/40 h-80 animate-pulse" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="font-mono text-sm text-red-800/70">Could not load products — {error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              {filteredGroups.map(({ primary, variants }) => (
+                <ProductCard key={primary.id} product={primary} variants={variants} />
+              ))}
+            </div>
+          )}
 
           {filteredGroups.length === 0 && (
             <div className="text-center py-16">

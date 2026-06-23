@@ -210,6 +210,33 @@ function QuickViewModal({
   );
 }
 
+// Set to true (or set VITE_ENABLE_SUBSCRIPTIONS=true in Vercel) to show the
+// Subscribe & Save toggle on product cards. Keep false until the WP plugin
+// is installed, activated, and discount tiers are configured.
+const SUBSCRIPTIONS_ENABLED = import.meta.env.VITE_ENABLE_SUBSCRIPTIONS === 'true';
+
+const INTERVALS: { days: 30 | 60 | 90 | 180; label: string }[] = [
+  { days: 30,  label: 'Every 30 days' },
+  { days: 60,  label: 'Every 60 days' },
+  { days: 90,  label: 'Every 90 days' },
+  { days: 180, label: 'Every 180 days' },
+];
+
+// Default discount tiers — overridden at runtime by WP REST API (vps/v1/discount-tiers)
+const DEFAULT_TIERS: Record<number, number> = { 30: 10, 60: 12, 90: 15, 180: 20 };
+
+// Module-level cache so we only fetch once per page load
+let cachedTiers: Record<number, number> | null = null;
+async function fetchTiers(): Promise<Record<number, number>> {
+  if (cachedTiers) return cachedTiers;
+  try {
+    const wpUrl = import.meta.env.VITE_WC_URL || import.meta.env.WC_URL || 'https://db.vintagepeptides.com';
+    const r = await fetch(`${wpUrl}/wp-json/vps/v1/discount-tiers`);
+    if (r.ok) cachedTiers = await r.json();
+  } catch { /* use defaults */ }
+  return cachedTiers ?? DEFAULT_TIERS;
+}
+
 export default function ProductCard({ product, variants }: ProductCardProps) {
   const { addItem } = useCart();
   const navigate = useNavigate();
@@ -217,6 +244,13 @@ export default function ProductCard({ product, variants }: ProductCardProps) {
   const allVariants = variants && variants.length > 0 ? variants : [product];
   const [selected, setSelected] = useState<Product>(allVariants[0]);
   const isMulti = allVariants.length > 1;
+
+  // Subscribe & Save state
+  const [purchaseMode, setPurchaseMode] = useState<'once' | 'subscribe'>('once');
+  const [subInterval, setSubInterval] = useState<30 | 60 | 90 | 180>(30);
+  const [tiers, setTiers] = useState<Record<number, number>>(DEFAULT_TIERS);
+
+  useState(() => { fetchTiers().then(setTiers); });
 
   return (
     <div className="group relative parchment-grain brass-double-border bg-parchment hover:border-brass transition-all duration-500 flex flex-col h-full">
@@ -300,10 +334,61 @@ export default function ProductCard({ product, variants }: ProductCardProps) {
           </p>
         )}
 
+        {/* Subscribe & Save toggle — hidden until VITE_ENABLE_SUBSCRIPTIONS=true */}
+        {SUBSCRIPTIONS_ENABLED && <div className="mb-3 border border-brass/20 bg-cream/30">
+          <div className="flex">
+            <button
+              onClick={() => setPurchaseMode('once')}
+              className={`flex-1 py-2 font-mono text-[10px] tracking-wider uppercase transition-all duration-200 ${
+                purchaseMode === 'once'
+                  ? 'bg-espresso text-cream'
+                  : 'text-saddle hover:text-espresso'
+              }`}
+            >
+              One-Time
+            </button>
+            <button
+              onClick={() => setPurchaseMode('subscribe')}
+              className={`flex-1 py-2 font-mono text-[10px] tracking-wider uppercase transition-all duration-200 ${
+                purchaseMode === 'subscribe'
+                  ? 'bg-brass text-espresso'
+                  : 'text-saddle hover:text-espresso'
+              }`}
+            >
+              Subscribe & Save {purchaseMode === 'subscribe' ? `${tiers[subInterval]}%` : ''}
+            </button>
+          </div>
+          {purchaseMode === 'subscribe' && (
+            <div className="px-3 py-2 border-t border-brass/20">
+              <select
+                value={subInterval}
+                onChange={(e) => setSubInterval(Number(e.target.value) as 30 | 60 | 90 | 180)}
+                className="w-full bg-transparent font-mono text-[10px] tracking-wider text-saddle outline-none cursor-pointer"
+              >
+                {INTERVALS.map((i) => (
+                  <option key={i.days} value={i.days}>
+                    {i.label} — Save {tiers[i.days]}%
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>}
+
         {/* Price */}
-        <p className="font-mono text-base text-espresso font-bold mb-3">
-          ${selected.priceMin}
-        </p>
+        {SUBSCRIPTIONS_ENABLED && purchaseMode === 'subscribe' ? (
+          <div className="flex items-baseline gap-2 mb-3">
+            <p className="font-mono text-base text-brass font-bold">
+              ${(selected.priceMin * (1 - tiers[subInterval] / 100)).toFixed(2)}
+            </p>
+            <p className="font-mono text-xs text-saddle/50 line-through">${selected.priceMin}</p>
+            <span className="font-mono text-[9px] text-brass/70 uppercase tracking-wider">/ cycle</span>
+          </div>
+        ) : (
+          <p className="font-mono text-base text-espresso font-bold mb-3">
+            ${selected.priceMin}
+          </p>
+        )}
 
         {/* Links */}
         <div className="flex items-center gap-3 mb-3">
@@ -336,18 +421,30 @@ export default function ProductCard({ product, variants }: ProductCardProps) {
 
         {/* Add to Cart */}
         <button
-          onClick={() =>
+          onClick={() => {
+            const discountPct = purchaseMode === 'subscribe' ? tiers[subInterval] : undefined;
+            const finalPrice = purchaseMode === 'subscribe'
+              ? parseFloat((selected.priceMin * (1 - tiers[subInterval] / 100)).toFixed(2))
+              : selected.priceMin;
             addItem({
               id: selected.id,
               name: `${selected.name} — ${selected.dosage}`,
               peptideCode: selected.peptideCode,
-              price: selected.priceMin,
+              price: finalPrice,
               dosage: selected.dosage,
-            })
-          }
-          className="w-full bg-espresso text-cream font-display text-[11px] tracking-[0.2em] uppercase py-3 border border-espresso hover:bg-brass hover:text-espresso hover:border-brass transition-all duration-300"
+              ...(purchaseMode === 'subscribe' && {
+                subscribeInterval: subInterval,
+                subscriptionDiscountPct: discountPct,
+              }),
+            });
+          }}
+          className={`w-full font-display text-[11px] tracking-[0.2em] uppercase py-3 border transition-all duration-300 ${
+            purchaseMode === 'subscribe'
+              ? 'bg-brass text-espresso border-brass hover:bg-espresso hover:text-cream hover:border-espresso'
+              : 'bg-espresso text-cream border-espresso hover:bg-brass hover:text-espresso hover:border-brass'
+          }`}
         >
-          Add to Cart
+          {purchaseMode === 'subscribe' ? '↻ Subscribe & Save' : 'Add to Cart'}
         </button>
       </div>
     </div>

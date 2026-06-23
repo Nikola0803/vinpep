@@ -21,6 +21,7 @@ import PrivacyPolicy from "../pages/privacy-policy/page";
 import ReturnPolicy from "../pages/return-policy/page";
 import Blog from "../pages/blog/page";
 import BlogPost from "../pages/blog-post/page";
+import RenewPage from "../pages/renew/page";
 
 const routes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -44,6 +45,7 @@ const routes: RouteObject[] = [
   { path: "/terms-of-service", element: <TermsOfService /> },
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/return-policy", element: <ReturnPolicy /> },
+  { path: "/renew", element: <RenewPage /> },
   { path: "*", element: <Navigate to="/" replace /> },
 ];
 

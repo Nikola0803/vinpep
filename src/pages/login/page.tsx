@@ -69,6 +69,15 @@ export default function Login() {
                 >
                   Login
                 </button>
+
+                <div className="text-center">
+                  <Link
+                    to="/forgot-password"
+                    className="font-body text-xs text-saddle hover:text-brass underline underline-offset-2 transition-colors"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
               </form>
             )}
 

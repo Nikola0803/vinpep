@@ -29,16 +29,6 @@ export default function Contact() {
               <div className="space-y-5 font-body text-sm text-saddle">
                 <div className="flex items-start gap-3">
                   <span className="w-5 h-5 flex items-center justify-center text-brass flex-shrink-0 mt-0.5">
-                    <i className="ri-map-pin-line" />
-                  </span>
-                  <div>
-                    <p className="text-espresso font-medium">Headquarters</p>
-                    <p>247 Research Way, Suite 400</p>
-                    <p>Boston, MA 02118</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="w-5 h-5 flex items-center justify-center text-brass flex-shrink-0 mt-0.5">
                     <i className="ri-phone-line" />
                   </span>
                   <div>
@@ -57,25 +47,6 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="brass-rule max-w-xs my-8" />
-
-              <h2 className="font-display text-sm tracking-[0.2em] uppercase text-espresso mb-4">
-                Laboratory Hours
-              </h2>
-              <div className="font-body text-sm text-saddle space-y-2">
-                <div className="flex justify-between max-w-xs">
-                  <span>Monday – Friday</span>
-                  <span>9:00 AM – 6:00 PM EST</span>
-                </div>
-                <div className="flex justify-between max-w-xs">
-                  <span>Saturday</span>
-                  <span>10:00 AM – 2:00 PM EST</span>
-                </div>
-                <div className="flex justify-between max-w-xs">
-                  <span>Sunday</span>
-                  <span>Closed</span>
-                </div>
-              </div>
             </div>
 
             {/* Form */}

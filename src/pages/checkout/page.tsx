@@ -161,6 +161,15 @@ const PAYMENT_METHODS = [
     instruction: 'A unique BTC address is generated for your order. 5% discount applied automatically.',
     disabled: false,
   },
+  {
+    id: 'wire',
+    name: 'Bank Wire Transfer',
+    handle: 'wire',
+    displayEntity: 'Vintage Vitality',
+    icon: 'ri-bank-line',
+    instruction: 'Domestic wire transfer — bank details provided after order submission. 1–2 business day processing.',
+    disabled: false,
+  },
 ];
 
 // ─── Mock coupons (replace with WC API call in production) ───────────────────
@@ -254,6 +263,7 @@ export default function CheckoutPage() {
     zip: '',
     notes: '',
   });
+  const [tosAccepted, setTosAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [confirmedOrder, setConfirmedOrder] = useState<AuditLogEntry | null>(null);
@@ -324,6 +334,7 @@ export default function CheckoutPage() {
     // Assign next worker in rotation for P2P payments (Cash App / Venmo / Zelle).
     // BTC and crypto stablecoins use fixed addresses — no worker rotation needed.
     const isP2P = ['cashapp', 'venmo', 'zelle'].includes(selectedPayment);
+    const isWire = selectedPayment === 'wire';
     const assignment = isP2P
       ? await assignWorker(selectedPayment as 'zelle' | 'cashapp' | 'venmo')
       : null;
@@ -331,7 +342,7 @@ export default function CheckoutPage() {
       ? (CRYPTO_ADDRESSES[selectedPayment]?.[cryptoNetwork] ?? null)
       : null;
     if (resolvedCryptoAddress) setCryptoAddress(resolvedCryptoAddress);
-    const resolvedHandle = resolvedCryptoAddress ?? assignment?.handle ?? method.handle;
+    const resolvedHandle = resolvedCryptoAddress ?? (isWire ? 'wire' : null) ?? assignment?.handle ?? method.handle;
     const assignedWorker  = assignment ? { id: assignment.workerId, name: assignment.workerName } : null;
 
     // For BTC — generate unique HD-wallet address for this order
@@ -661,6 +672,40 @@ export default function CheckoutPage() {
                           BTC rate: ${btcPriceUsd.toLocaleString()}/BTC at time of order
                         </p>
                       )}
+                    </>
+                  ) : confirmedOrder.paymentMethod === 'wire' ? (
+                    <>
+                      <p className="font-body text-xs text-saddle/70 mb-4 leading-relaxed">
+                        Please initiate a domestic wire transfer using the details below. Include your memo code in the wire reference field. Processing takes 1–2 business days.
+                      </p>
+                      <div className="space-y-2 mb-4">
+                        {[
+                          ['Bank Name', 'Chase Bank'],
+                          ['Account Name', 'Vintage Vitality LLC'],
+                          ['Routing Number', '021000021'],
+                          ['Account Number', 'XXXXXXXXXX'],
+                          ['Wire Reference', confirmedOrder.memoCode],
+                        ].map(([label, value]) => (
+                          <div key={label} className="flex items-center justify-between p-2.5 border border-brass/20 bg-cream/40">
+                            <span className="font-display text-[9px] tracking-[0.2em] uppercase text-saddle">{label}</span>
+                            <span className={`font-mono text-xs font-bold ${label === 'Wire Reference' ? 'text-brass tracking-[0.3em]' : 'text-espresso'}`}>{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-4 border-2 border-brass bg-brass/10 flex items-start gap-3">
+                        <i className="ri-bank-line text-brass text-xl flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-display text-xs tracking-[0.15em] uppercase text-espresso mb-1">
+                            Required: Email Wire Confirmation
+                          </p>
+                          <p className="font-mono text-xs text-saddle leading-relaxed">
+                            After initiating the wire, email your bank confirmation to{' '}
+                            <strong className="text-brass">orders@vintagepeptides.com</strong>{' '}
+                            with subject <strong>Order #{confirmedOrder.wcOrderId}</strong>.
+                            Your order ships once funds clear.
+                          </p>
+                        </div>
+                      </div>
                     </>
                   ) : (
                     <>
@@ -995,6 +1040,25 @@ export default function CheckoutPage() {
                   <p className="font-mono text-[10px] text-saddle/50 mt-1.5 text-right">{formData.notes.length}/500</p>
                 </div>
 
+                {/* Terms of Service */}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="mt-1 w-4 h-4 accent-brass cursor-pointer flex-shrink-0"
+                    checked={tosAccepted}
+                    onChange={(e) => setTosAccepted(e.target.checked)}
+                  />
+                  <span className="font-body text-xs text-saddle leading-relaxed">
+                    I have read and agree to the{' '}
+                    <a href="/terms" className="text-brass underline underline-offset-2 hover:text-brass-light">
+                      Terms of Service
+                    </a>
+                    {' '}and confirm that all products will be used for lawful{' '}
+                    <strong className="text-espresso">laboratory research purposes only</strong>.
+                    I am a qualified researcher aged 21 or older.
+                  </span>
+                </label>
+
                 {/* Submit */}
                 {submitError && (
                   <div className="p-4 border border-red-900/30 bg-red-900/5">
@@ -1002,9 +1066,9 @@ export default function CheckoutPage() {
                   </div>
                 )}
 
-                <button type="submit" disabled={!selectedPayment || submitting}
+                <button type="submit" disabled={!selectedPayment || !tosAccepted || submitting}
                   className={`w-full font-display text-xs tracking-[0.2em] uppercase py-4 border transition-all duration-300 whitespace-nowrap ${
-                    selectedPayment && !submitting
+                    selectedPayment && tosAccepted && !submitting
                       ? 'bg-brass hover:bg-brass-light text-espresso border-brass hover:shadow-[0_0_20px_rgba(184,148,42,0.3)]'
                       : 'bg-saddle/10 text-saddle/40 border-saddle/20 cursor-not-allowed'
                   }`}>

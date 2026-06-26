@@ -94,12 +94,6 @@ export default function Footer() {
               Contact
             </h4>
             <ul className="space-y-2.5 font-body text-sm">
-              <li className="flex items-start gap-2">
-                <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <i className="ri-map-pin-line text-xs text-brass" />
-                </span>
-                247 Research Way, Suite 400<br />Boston, MA 02118
-              </li>
               <li className="flex items-center gap-2">
                 <span className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-phone-line text-xs text-brass" />
@@ -111,15 +105,6 @@ export default function Footer() {
                   <i className="ri-mail-line text-xs text-brass" />
                 </span>
                 research@vintagepeptides.com
-              </li>
-              <li className="mt-3 pt-3 border-t border-brass/20">
-                <span className="font-display text-[10px] tracking-widest uppercase text-brass">
-                  Hours
-                </span>
-                <p className="mt-1 text-xs text-cream/60">
-                  Mon – Fri: 9:00 AM – 6:00 PM EST<br />
-                  Sat: 10:00 AM – 2:00 PM EST
-                </p>
               </li>
             </ul>
           </div>

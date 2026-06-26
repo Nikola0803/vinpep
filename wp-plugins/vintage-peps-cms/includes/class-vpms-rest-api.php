@@ -68,6 +68,18 @@ class VPMS_REST_API {
             'permission_callback' => '__return_true',
         ] );
 
+        // ── Auth: Forgot / Reset Password ────────────────────────────────────
+        register_rest_route( self::NS, '/forgot-password', [
+            'methods'             => 'POST',
+            'callback'            => [ __CLASS__, 'forgot_password' ],
+            'permission_callback' => '__return_true',
+        ] );
+        register_rest_route( self::NS, '/reset-password', [
+            'methods'             => 'POST',
+            'callback'            => [ __CLASS__, 'do_reset_password' ],
+            'permission_callback' => '__return_true',
+        ] );
+
         // ── Admin: Orders ─────────────────────────────────────────────────────
         register_rest_route( self::NS, '/orders/pending', [
             'methods'             => 'GET',
@@ -373,5 +385,79 @@ class VPMS_REST_API {
         $order->update_status( 'processing', 'Marked paid via admin panel.' );
 
         return new WP_REST_Response( [ 'success' => true, 'status' => 'processing' ], 200 );
+    }
+
+    // ── Auth: Forgot / Reset Password ────────────────────────────────────────
+
+    /**
+     * POST /wp-json/vintage-peps/v1/forgot-password
+     * Body: { email }
+     * Generates a reset key and sends a reset email with a link to the React frontend.
+     * Always returns 200 to prevent email enumeration.
+     */
+    public static function forgot_password( WP_REST_Request $req ): WP_REST_Response {
+        $email = sanitize_email( $req->get_param( 'email' ) );
+
+        if ( ! is_email( $email ) ) {
+            // Still 200 — no enumeration
+            return new WP_REST_Response( [ 'success' => true ], 200 );
+        }
+
+        $user = get_user_by( 'email', $email );
+        if ( ! $user ) {
+            return new WP_REST_Response( [ 'success' => true ], 200 );
+        }
+
+        $key = get_password_reset_key( $user );
+        if ( is_wp_error( $key ) ) {
+            return new WP_REST_Response( [ 'success' => true ], 200 );
+        }
+
+        // Build the frontend reset URL
+        $frontend_url = get_option( 'vpms_frontend_url', 'https://vintagepeptides.com' );
+        $reset_url    = rtrim( $frontend_url, '/' ) . '/reset-password'
+            . '?key=' . rawurlencode( $key )
+            . '&login=' . rawurlencode( $user->user_login );
+
+        $subject = 'Password Reset — Vintage Peptides';
+        $message = "Hello {$user->display_name},\r\n\r\n"
+            . "You (or someone else) requested a password reset for your Vintage Peptides research account.\r\n\r\n"
+            . "Click the link below to reset your password. This link expires in 24 hours.\r\n\r\n"
+            . "{$reset_url}\r\n\r\n"
+            . "If you did not request a password reset, you can safely ignore this email.\r\n\r\n"
+            . "— Vintage Peptides Research Team";
+
+        wp_mail( $user->user_email, $subject, $message );
+
+        return new WP_REST_Response( [ 'success' => true ], 200 );
+    }
+
+    /**
+     * POST /wp-json/vintage-peps/v1/reset-password
+     * Body: { key, login, password }
+     * Validates the key and sets the new password.
+     */
+    public static function do_reset_password( WP_REST_Request $req ): WP_REST_Response {
+        $key      = sanitize_text_field( $req->get_param( 'key' ) );
+        $login    = sanitize_text_field( $req->get_param( 'login' ) );
+        $password = $req->get_param( 'password' );
+
+        if ( ! $key || ! $login || ! $password || strlen( $password ) < 8 ) {
+            return new WP_REST_Response( [ 'error' => 'Missing or invalid parameters.' ], 400 );
+        }
+
+        $user = get_user_by( 'login', $login );
+        if ( ! $user ) {
+            return new WP_REST_Response( [ 'error' => 'Invalid reset link.' ], 400 );
+        }
+
+        $result = check_password_reset_key( $key, $login );
+        if ( is_wp_error( $result ) ) {
+            return new WP_REST_Response( [ 'error' => 'Reset link is expired or invalid. Please request a new one.' ], 400 );
+        }
+
+        reset_password( $user, $password );
+
+        return new WP_REST_Response( [ 'success' => true ], 200 );
     }
 }

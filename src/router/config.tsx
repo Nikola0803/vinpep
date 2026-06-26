@@ -22,6 +22,8 @@ import ReturnPolicy from "../pages/return-policy/page";
 import Blog from "../pages/blog/page";
 import BlogPost from "../pages/blog-post/page";
 import RenewPage from "../pages/renew/page";
+import ForgotPassword from "../pages/forgot-password/page";
+import ResetPassword from "../pages/reset-password/page";
 
 const routes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -46,6 +48,8 @@ const routes: RouteObject[] = [
   { path: "/privacy-policy", element: <PrivacyPolicy /> },
   { path: "/return-policy", element: <ReturnPolicy /> },
   { path: "/renew", element: <RenewPage /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
+  { path: "/reset-password", element: <ResetPassword /> },
   { path: "*", element: <Navigate to="/" replace /> },
 ];
 

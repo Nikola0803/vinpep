@@ -82,6 +82,24 @@ function vpsub_register_routes(): void {
         'callback'            => 'vpsub_get_all',
         'permission_callback' => fn() => current_user_can( 'manage_options' ),
     ] );
+
+    // GET /wp-json/vp-subs/v1/discount-tiers (public)
+    register_rest_route( 'vp-subs/v1', '/discount-tiers', [
+        'methods'             => 'GET',
+        'callback'            => 'vpsub_discount_tiers',
+        'permission_callback' => '__return_true',
+    ] );
+}
+
+function vpsub_discount_tiers(): WP_REST_Response {
+    // Configurable via WP options, falls back to sensible defaults
+    $tiers = get_option( 'vpsub_discount_tiers', [
+        30  => 10,
+        60  => 12,
+        90  => 15,
+        180 => 20,
+    ] );
+    return new WP_REST_Response( $tiers, 200 );
 }
 
 function vpsub_get_subscriptions( WP_REST_Request $req ): WP_REST_Response {

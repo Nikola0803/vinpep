@@ -25,15 +25,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Valid email is required' });
   }
 
-  try {
-    const url = `${WC_URL.replace(/\/$/, '')}/wp-json/vp-crm/v1/subscribe`;
+  const tryFetch = async (url: string) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email.trim(), name: name ?? '' }),
+    signal: AbortSignal.timeout(8_000),
+  });
 
-    const wpRes = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim(), name: name ?? '' }),
-      signal: AbortSignal.timeout(8_000),
-    });
+  try {
+    const base = WC_URL.replace(/\/$/, '');
+    const path = '/wp-json/vp-crm/v1/subscribe';
+
+    let wpRes: Response;
+    try {
+      wpRes = await tryFetch(base + path);
+    } catch {
+      // SSL or network error on primary URL — try HTTP fallback
+      const httpBase = base.replace(/^https:\/\//, 'http://');
+      wpRes = await tryFetch(httpBase + path);
+    }
 
     const data = await wpRes.json().catch(() => ({}));
 

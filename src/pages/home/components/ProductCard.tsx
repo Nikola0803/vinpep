@@ -226,16 +226,15 @@ const INTERVALS: { days: 30 | 60 | 90 | 180; label: string }[] = [
   { days: 180, label: 'Every 180 days' },
 ];
 
-// Default discount tiers — overridden at runtime by WP REST API (vps/v1/discount-tiers)
+// Discount tiers: days → % off
 const DEFAULT_TIERS: Record<number, number> = { 30: 10, 60: 12, 90: 15, 180: 20 };
 
-// Module-level cache so we only fetch once per page load
 let cachedTiers: Record<number, number> | null = null;
 async function fetchTiers(): Promise<Record<number, number>> {
   if (cachedTiers) return cachedTiers;
   try {
-    const wpUrl = import.meta.env.VITE_WC_URL || import.meta.env.WC_URL || 'https://db.vintagepeptides.com';
-    const r = await fetch(`${wpUrl}/wp-json/vps/v1/discount-tiers`);
+    const wpUrl = import.meta.env.VITE_WC_URL || 'https://db.vintagepeptides.com';
+    const r = await fetch(`${wpUrl}/wp-json/vp-subs/v1/discount-tiers`);
     if (r.ok) cachedTiers = await r.json();
   } catch { /* use defaults */ }
   return cachedTiers ?? DEFAULT_TIERS;

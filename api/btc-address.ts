@@ -85,12 +85,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(503).json({ error: 'BTC zpub not configured in WP admin' });
     }
 
-    // ── 2. Derive native SegWit (bc1...) address from zpub + index ───────────
-    // Strip any whitespace that may have been introduced when pasting the key.
-    const cleanZpub = zpub.replace(/\s+/g, '');
-    // zpub uses BIP84 version bytes (0x04b24746). @scure/bip32 accepts custom versions.
-    const ZPUB_VERSIONS = { public: 0x04b24746, private: 0x04b2430c };
-    const hdKey = HDKey.fromExtendedKey(cleanZpub, ZPUB_VERSIONS);
+    // ── 2. Derive native SegWit (bc1...) address from zpub/xpub + index ───────
+    // Strip whitespace, then extract the first valid-looking extended public key.
+    const stripped = zpub.replace(/\s+/g, '');
+    const keyMatch = stripped.match(/[zxy]pub[1-9A-HJ-NP-Za-km-z]{100,115}/);
+    if (!keyMatch) throw new Error(`Invalid extended public key stored in WP (got: ${stripped.slice(0, 20)}…). Go to WP Admin → BTC Settings and re-paste the key.`);
+    const cleanKey = keyMatch[0];
+
+    // Version bytes differ by prefix: zpub = BIP84 native-SegWit, xpub/ypub = standard
+    let versions: { public: number; private: number };
+    if (cleanKey.startsWith('zpub')) {
+      versions = { public: 0x04b24746, private: 0x04b2430c };
+    } else if (cleanKey.startsWith('ypub')) {
+      versions = { public: 0x049d7cb2, private: 0x049d7878 };
+    } else {
+      // xpub — standard BIP32 version bytes; p2wpkh still produces bc1 addresses
+      versions = { public: 0x0488b21e, private: 0x0488ade4 };
+    }
+
+    const hdKey = HDKey.fromExtendedKey(cleanKey, versions);
     const child = hdKey.deriveChild(0).deriveChild(index); // m/0/{index} — external chain
     if (!child.publicKey) throw new Error('HD derivation produced no public key');
     const address: string = p2wpkh(child.publicKey).address!;

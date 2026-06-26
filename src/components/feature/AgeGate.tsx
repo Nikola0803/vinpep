@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useAgeGate } from '../../hooks/useAgeGate';
 
 export default function AgeGate() {
   const { isConfirmed, confirm, exit } = useAgeGate();
+  const [checked, setChecked] = useState(false);
 
   if (isConfirmed === null || isConfirmed === true) return null;
 
@@ -33,7 +35,12 @@ export default function AgeGate() {
 
         <div className="flex flex-col gap-3 mb-6">
           <label className="flex items-start gap-3 cursor-pointer">
-            <input type="checkbox" className="mt-1 w-4 h-4 accent-brass" defaultChecked readOnly />
+            <input
+              type="checkbox"
+              className="mt-1 w-4 h-4 accent-brass cursor-pointer"
+              checked={checked}
+              onChange={(e) => setChecked(e.target.checked)}
+            />
             <span className="font-body text-xs text-saddle leading-relaxed">
               I confirm that I am 21 years of age or older and that all products purchased will be
               used for lawful research purposes only.
@@ -44,7 +51,12 @@ export default function AgeGate() {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={confirm}
-            className="flex-1 bg-brass hover:bg-brass-light text-espresso font-display text-xs tracking-[0.2em] uppercase py-3 px-6 border border-brass transition-all duration-300 hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]"
+            disabled={!checked}
+            className={`flex-1 font-display text-xs tracking-[0.2em] uppercase py-3 px-6 border transition-all duration-300 ${
+              checked
+                ? 'bg-brass hover:bg-brass-light text-espresso border-brass hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]'
+                : 'bg-saddle/10 text-saddle/40 border-saddle/20 cursor-not-allowed'
+            }`}
           >
             I Confirm
           </button>

@@ -412,7 +412,9 @@ export default function CheckoutPage() {
           ];
         })(),
       ],
-      status: 'pending',
+      // on-hold triggers WooCommerce's "Customer On Hold Order" email automatically
+      // (pending does not send any customer email)
+      status: 'on-hold',
     };
 
     try {
@@ -602,11 +604,21 @@ export default function CheckoutPage() {
                           {copied ? 'Copied!' : `Copy ${confirmedOrder.paymentMethod.toUpperCase()} Address`}
                         </span>
                       </button>
-                      <p className="font-mono text-[10px] text-saddle/60 leading-relaxed">
-                        After sending, email your transaction hash to{' '}
-                        <strong>orders@vintagepeptides.com</strong>{' '}
-                        with order <strong>#{confirmedOrder.wcOrderId}</strong> for faster verification.
-                      </p>
+                      {/* Prominent confirmation alert */}
+                      <div className="p-4 border-2 border-brass bg-brass/10 flex items-start gap-3">
+                        <i className="ri-mail-send-line text-brass text-xl flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-display text-xs tracking-[0.15em] uppercase text-espresso mb-1">
+                            Required: Email Your Transaction Hash
+                          </p>
+                          <p className="font-mono text-xs text-saddle leading-relaxed">
+                            After sending, email your <strong>transaction hash (TXID)</strong> to{' '}
+                            <strong className="text-brass">orders@vintagepeptides.com</strong>{' '}
+                            with subject <strong>Order #{confirmedOrder.wcOrderId}</strong>.
+                            Without this your order cannot be verified.
+                          </p>
+                        </div>
+                      </div>
                     </>
                   ) : confirmedOrder.paymentMethod === 'btc' ? (
                     <>
@@ -675,11 +687,27 @@ export default function CheckoutPage() {
                       <p className="font-mono text-[10px] text-saddle/50 mb-3">
                         Payments process under our parent entity <strong>Vintage Vitality</strong>.
                       </p>
-                      <div className="flex items-center gap-3 p-3 bg-brass/5 border border-brass/20">
+                      <div className="flex items-center gap-3 p-3 bg-brass/5 border border-brass/20 mb-4">
                         <span className="font-mono text-xs text-saddle">Send exactly:</span>
                         <span className="font-mono text-lg text-brass font-bold">
                           ${confirmedOrder.total.toFixed(2)}
                         </span>
+                      </div>
+                      {/* Prominent confirmation alert */}
+                      <div className="p-4 border-2 border-brass bg-brass/10 flex items-start gap-3">
+                        <i className="ri-screenshot-line text-brass text-xl flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-display text-xs tracking-[0.15em] uppercase text-espresso mb-1">
+                            Required: Send Payment Screenshot
+                          </p>
+                          <p className="font-mono text-xs text-saddle leading-relaxed">
+                            After paying, email a screenshot of your payment confirmation to{' '}
+                            <strong className="text-brass">orders@vintagepeptides.com</strong>{' '}
+                            with subject <strong>Order #{confirmedOrder.wcOrderId}</strong> and your memo code{' '}
+                            <strong>{confirmedOrder.memoCode}</strong>.
+                            Without this your order cannot be confirmed.
+                          </p>
+                        </div>
                       </div>
                     </>
                   )}
@@ -1053,7 +1081,7 @@ export default function CheckoutPage() {
                         <input type="text" value={couponInput}
                           onChange={(e) => { setCouponInput(e.target.value); setCouponError(''); }}
                           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), applyCoupon())}
-                          placeholder="LAUNCH10"
+                          placeholder="ENTER CODE"
                           className="flex-1 bg-parchment border border-brass/40 font-mono text-xs text-espresso py-2 px-3 focus:outline-none focus:border-brass placeholder:text-saddle/30 uppercase"
                         />
                         <button type="button" onClick={applyCoupon}

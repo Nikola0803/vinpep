@@ -18,11 +18,16 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const WC_URL    = process.env.VITE_WC_URL    ?? '';
-const WC_KEY    = process.env.VITE_WC_KEY    ?? '';
-const WC_SECRET = process.env.VITE_WC_SECRET ?? '';
+const WC_URL          = process.env.WC_URL          || process.env.VITE_WC_URL    || '';
+const WC_USER         = process.env.WC_USER         || '';
+const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
+const WC_KEY          = process.env.WC_KEY          || process.env.VITE_WC_KEY   || '';
+const WC_SECRET       = process.env.WC_SECRET       || process.env.VITE_WC_SECRET || '';
 
 function wcAuth(): string {
+  if (WC_USER && WC_APP_PASSWORD) {
+    return 'Basic ' + Buffer.from(`${WC_USER}:${WC_APP_PASSWORD}`).toString('base64');
+  }
   return 'Basic ' + Buffer.from(`${WC_KEY}:${WC_SECRET}`).toString('base64');
 }
 

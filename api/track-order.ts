@@ -11,11 +11,16 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const WC_URL = process.env.VITE_WC_URL!;
-const WC_KEY = process.env.VITE_WC_KEY!;
-const WC_SEC = process.env.VITE_WC_SECRET!;
+const WC_URL          = process.env.WC_URL          || process.env.VITE_WC_URL    || '';
+const WC_USER         = process.env.WC_USER         || '';
+const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
+const WC_KEY          = process.env.WC_KEY          || process.env.VITE_WC_KEY   || '';
+const WC_SEC          = process.env.WC_SECRET       || process.env.VITE_WC_SECRET || '';
 
 function wcAuth() {
+  if (WC_USER && WC_APP_PASSWORD) {
+    return 'Basic ' + Buffer.from(`${WC_USER}:${WC_APP_PASSWORD}`).toString('base64');
+  }
   return 'Basic ' + Buffer.from(`${WC_KEY}:${WC_SEC}`).toString('base64');
 }
 
@@ -55,8 +60,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const q = String(req.query.q || '').trim();
   if (!q) return res.status(400).json({ error: 'Missing query parameter: q' });
 
-  if (!WC_URL || !WC_KEY || !WC_SEC) {
-    // Dev fallback — return mock data
+  const hasAuth = (WC_USER && WC_APP_PASSWORD) || (WC_KEY && WC_SEC);
+  if (!WC_URL || !hasAuth) {
     return res.status(200).json(mockOrder(q));
   }
 

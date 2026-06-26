@@ -33,9 +33,11 @@ export default function ForgotPassword() {
       <div className="py-16 md:py-24 parchment-grain">
         <div className="relative z-10 max-w-md mx-auto px-4 md:px-8">
           <div className="text-center mb-10">
-            <div className="w-16 h-16 rounded-full border-2 border-brass flex items-center justify-center mx-auto mb-4 bg-espresso">
-              <span className="font-display text-lg text-brass tracking-widest">VP</span>
-            </div>
+            <img
+              src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
+              alt="Vintage Peptides"
+              className="h-14 w-auto object-contain mx-auto mb-4"
+            />
             <h1 className="font-display text-xl tracking-[0.2em] uppercase text-espresso">
               Reset Password
             </h1>

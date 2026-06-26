@@ -1,10 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import TickerBar from '@/components/feature/TickerBar';
 import UtilityBar from '@/components/feature/UtilityBar';
 import Navbar from '@/components/feature/Navbar';
 import Footer from '@/components/feature/Footer';
-import AgeGate from '@/components/feature/AgeGate';
 import HeroSection from './components/HeroSection';
 import ProductGrid from './components/ProductGrid';
 import CategoryTiles from './components/CategoryTiles';
@@ -15,7 +12,6 @@ import ResearchUseWarning from './components/ResearchUseWarning';
 export default function Home() {
   return (
     <div className="min-h-screen bg-parchment">
-      <AgeGate />
       <TickerBar />
       <UtilityBar />
       <Navbar />

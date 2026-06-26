@@ -11,11 +11,11 @@ export default function AgeGate() {
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative w-full max-w-md bg-parchment brass-double-border p-8 md:p-10 shadow-2xl">
         <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 rounded-full border-2 border-brass flex items-center justify-center bg-espresso shadow-lg">
-            <span className="font-display text-xl text-brass tracking-widest">
-              VP
-            </span>
-          </div>
+          <img
+            src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
+            alt="Vintage Peptides"
+            className="h-20 w-auto object-contain"
+          />
         </div>
 
         <h2 className="font-display text-center text-lg tracking-[0.2em] uppercase text-espresso mb-2">

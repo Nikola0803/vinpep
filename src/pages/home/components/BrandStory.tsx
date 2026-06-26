@@ -7,11 +7,11 @@ export default function BrandStory() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <div className="lg:col-span-4 flex flex-col items-center lg:items-start">
-            <div className="w-24 h-24 rounded-full border-2 border-brass flex items-center justify-center mb-6 bg-espresso/50">
-              <span className="font-display text-2xl text-brass tracking-widest">
-                VP
-              </span>
-            </div>
+            <img
+              src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
+              alt="Vintage Peptides"
+              className="h-24 w-auto object-contain mb-6"
+            />
             <div className="brass-rule w-24 mb-6" />
             <p className="font-body text-xs tracking-[0.15em] uppercase text-brass text-center lg:text-left">
               Est. 2024

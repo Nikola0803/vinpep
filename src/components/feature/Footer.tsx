@@ -5,11 +5,11 @@ export default function Footer() {
     <footer className="bg-espresso text-cream/80 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-8">
         <div className="flex justify-center mb-10">
-          <div className="w-16 h-16 rounded-full border-2 border-brass flex items-center justify-center">
-            <span className="font-display text-lg text-brass tracking-widest">
-              VP
-            </span>
-          </div>
+          <img
+            src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
+            alt="Vintage Peptides"
+            className="h-16 w-auto object-contain"
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-12">

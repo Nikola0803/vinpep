@@ -47,15 +47,12 @@ export default function Navbar() {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-full border-2 border-brass flex items-center justify-center group-hover:border-brass-light transition-colors bg-espresso">
-              <span className="font-display text-xs text-brass tracking-widest">
-                VP
-              </span>
-            </div>
-            <span className="font-display text-sm tracking-[0.25em] text-brass uppercase hidden sm:block">
-              Vintage Peptides
-            </span>
+          <Link to="/" className="flex items-center group">
+            <img
+              src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
+              alt="Vintage Peptides"
+              className="h-10 w-auto object-contain group-hover:opacity-80 transition-opacity"
+            />
           </Link>
 
           <div className="hidden md:flex items-center gap-8">

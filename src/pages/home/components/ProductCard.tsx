@@ -300,11 +300,8 @@ export default function ProductCard({ product, variants }: ProductCardProps) {
       </button>
 
       <div className="relative z-10 p-4 md:p-5 flex flex-col flex-1">
-        {/* Top row: monogram + rating */}
-        <div className="flex items-start justify-between mb-2">
-          <div className="w-6 h-6 rounded-full border border-brass/30 flex items-center justify-center">
-            <span className="font-display text-[7px] text-brass/60 tracking-widest">VP</span>
-          </div>
+        {/* Top row: rating */}
+        <div className="flex items-start justify-end mb-2">
           <StarRating rating={selected.rating} count={selected.reviewCount} />
         </div>
 

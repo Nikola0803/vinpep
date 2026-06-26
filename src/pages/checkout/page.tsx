@@ -166,7 +166,6 @@ const PAYMENT_METHODS = [
 // ─── Mock coupons (replace with WC API call in production) ───────────────────
 
 const VALID_COUPONS: Record<string, { type: 'flat' | 'percent'; value: number; label: string }> = {
-  LAUNCH10: { type: 'percent', value: 10, label: '10% off' },
   RESEARCH15: { type: 'percent', value: 15, label: '15% off' },
   SAVE20: { type: 'flat', value: 20, label: '$20 off' },
 };
@@ -231,6 +230,171 @@ function Countdown({ expiresAt, onExpired }: { expiresAt: number; onExpired: () 
   }, [expiresAt, onExpired]);
 
   return <span className="font-mono text-brass font-bold text-lg tabular-nums">{display}</span>;
+}
+
+// ─── Payment Proof Upload (crypto orders) ────────────────────────────────────
+
+function PaymentProofUpload({ orderId, invoiceId }: { orderId: number; invoiceId: string }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadDone, setUploadDone] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      if (f.size > 10 * 1024 * 1024) {
+        setUploadError('File too large (max 10 MB).');
+        return;
+      }
+      setFile(f);
+      setUploadError('');
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file || uploading) return;
+    setUploading(true);
+    setUploadError('');
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Strip the data:...;base64, prefix
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch('/api/upload-payment-proof', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, invoiceId, imageBase64: base64, imageType: file.type }),
+      });
+
+      if (res.ok) {
+        setUploadDone(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setUploadError((data as { error?: string }).error ?? 'Upload failed.');
+      }
+    } catch {
+      setUploadError('Upload failed. Please email orders@vintagepeptides.com.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (uploadDone) {
+    return (
+      <div className="p-3 border border-green-700/30 bg-green-700/5 flex items-center gap-2 mt-3">
+        <i className="ri-check-line text-green-700" />
+        <span className="font-mono text-xs text-green-800">Payment proof uploaded — we'll verify your transaction shortly.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 space-y-2">
+      <p className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle">
+        Upload Payment Screenshot (optional)
+      </p>
+      <div className="flex items-center gap-2">
+        <label className="flex-1 flex items-center gap-2 px-3 py-2 border border-brass/30 bg-parchment cursor-pointer hover:border-brass/50 transition-colors">
+          <i className="ri-upload-2-line text-brass" />
+          <span className="font-mono text-xs text-saddle truncate">
+            {file ? file.name : 'Choose screenshot…'}
+          </span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </label>
+        {file && (
+          <button
+            type="button"
+            onClick={handleUpload}
+            disabled={uploading}
+            className="px-4 py-2 bg-brass hover:bg-brass-light text-espresso font-display text-[10px] tracking-wider uppercase border border-brass transition-colors disabled:opacity-60"
+          >
+            {uploading ? (
+              <span className="w-3 h-3 border border-espresso border-t-transparent rounded-full animate-spin inline-block" />
+            ) : 'Upload'}
+          </button>
+        )}
+      </div>
+      {uploadError && <p className="font-mono text-[10px] text-red-700">{uploadError}</p>}
+    </div>
+  );
+}
+
+// ─── Payment FAQ / Guidance ───────────────────────────────────────────────────
+
+const FAQ_ITEMS = [
+  {
+    q: 'Why no credit cards?',
+    a: 'Research peptide companies are considered high-risk by card networks. We use P2P apps and crypto to ensure reliable, uninterrupted service.',
+  },
+  {
+    q: 'How does the memo code work?',
+    a: 'When you pay, enter your 6-character memo code in the Notes / Memo field — nothing else. Our system auto-matches your payment by code. Extra text causes delays.',
+  },
+  {
+    q: 'When will my order ship?',
+    a: 'Once payment is confirmed (usually within a few hours), orders ship within 1–2 business days. You\'ll receive tracking via email.',
+  },
+  {
+    q: 'What if I have a payment issue?',
+    a: 'Email orders@vintagepeptides.com with your Order # and memo code. We respond within one business day.',
+  },
+  {
+    q: 'Is my information safe?',
+    a: 'All data is encrypted in transit and at rest. We never sell or share personal information. Orders are stored in an immutable audit log.',
+  },
+];
+
+function PaymentFAQ() {
+  const [open, setOpen] = useState<number | null>(null);
+  return (
+    <div className="border border-brass/20 bg-cream/40">
+      <button
+        type="button"
+        onClick={() => setOpen(open === -1 ? null : -1)}
+        className="w-full flex items-center justify-between px-6 py-4 text-left"
+      >
+        <span className="font-display text-sm tracking-[0.2em] uppercase text-espresso flex items-center gap-3">
+          <i className="ri-question-line text-brass" />
+          How does payment work?
+        </span>
+        <i className={`ri-arrow-${open === -1 ? 'up' : 'down'}-s-line text-brass text-lg transition-transform`} />
+      </button>
+      {open === -1 && (
+        <div className="px-6 pb-4 space-y-2">
+          {FAQ_ITEMS.map((item, i) => (
+            <div key={i} className="border border-brass/10">
+              <button
+                type="button"
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between px-4 py-3 text-left"
+              >
+                <span className="font-display text-xs tracking-wider uppercase text-espresso">{item.q}</span>
+                <i className={`ri-arrow-${open === i ? 'up' : 'down'}-s-line text-brass text-sm flex-shrink-0 ml-2`} />
+              </button>
+              {open === i && (
+                <div className="px-4 pb-3">
+                  <p className="font-body text-sm text-saddle leading-relaxed">{item.a}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
@@ -620,6 +784,13 @@ export default function CheckoutPage() {
                           </p>
                         </div>
                       </div>
+                      {/* Screenshot upload */}
+                      {confirmedOrder.wcOrderId && (
+                        <PaymentProofUpload
+                          orderId={confirmedOrder.wcOrderId}
+                          invoiceId={confirmedOrder.invoiceId}
+                        />
+                      )}
                     </>
                   ) : confirmedOrder.paymentMethod === 'btc' ? (
                     <>
@@ -817,7 +988,7 @@ export default function CheckoutPage() {
                       ['institution', 'Institution / Lab', 'text', 'Boston Research Institute', false],
                     ].map(([field, label, type, placeholder, required]) => (
                       <div key={field as string}>
-                        <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-1.5 block">
+                        <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-1.5 block">
                           {label as string}
                         </label>
                         <input
@@ -841,7 +1012,7 @@ export default function CheckoutPage() {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-1.5 block">
+                      <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-1.5 block">
                         Street Address *
                       </label>
                       <input type="text" required value={formData.address}
@@ -852,7 +1023,7 @@ export default function CheckoutPage() {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-1.5 block">City *</label>
+                        <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-1.5 block">City *</label>
                         <input type="text" required value={formData.city}
                           onChange={(e) => handleChange('city', e.target.value)}
                           placeholder="Boston"
@@ -860,11 +1031,11 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div>
-                        <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-1.5 block">State *</label>
+                        <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-1.5 block">State *</label>
                         <StateAutocomplete value={formData.state} onChange={(v) => handleChange('state', v)} />
                       </div>
                       <div>
-                        <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-1.5 block">ZIP Code *</label>
+                        <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-1.5 block">ZIP Code *</label>
                         <input type="text" required value={formData.zip}
                           onChange={(e) => handleChange('zip', e.target.value)}
                           placeholder="02118"
@@ -980,6 +1151,9 @@ export default function CheckoutPage() {
                   )}
                 </div>
 
+                {/* Payment Guidance FAQ */}
+                <PaymentFAQ />
+
                 {/* Order Notes */}
                 <div className="p-6 border border-brass/20 bg-cream/40">
                   <h2 className="font-display text-sm tracking-[0.2em] uppercase text-espresso mb-5 flex items-center gap-3">
@@ -1084,7 +1258,7 @@ export default function CheckoutPage() {
 
                   {/* Coupon */}
                   <div className="mb-5">
-                    <label className="font-display text-[10px] tracking-[0.2em] uppercase text-saddle mb-2 block">
+                    <label className="font-display text-xs tracking-[0.15em] uppercase text-saddle mb-2 block">
                       Coupon Code
                     </label>
                     {appliedCoupon ? (

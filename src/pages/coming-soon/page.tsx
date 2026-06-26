@@ -1,9 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const PREVIEW_PASSWORD = "vintage2026"; // change this via WP Admin or env var
+const STORAGE_KEY = "vp-preview-unlocked";
 
 export default function ComingSoonPage() {
+  const [unlocked, setUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Persist unlock across refreshes
+  useEffect(() => {
+    if (sessionStorage.getItem(STORAGE_KEY) === "1") setUnlocked(true);
+  }, []);
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwInput.trim().toLowerCase() === PREVIEW_PASSWORD.toLowerCase()) {
+      sessionStorage.setItem(STORAGE_KEY, "1");
+      setUnlocked(true);
+      setPwError(false);
+    } else {
+      setPwError(true);
+      setPwInput("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -12,10 +35,6 @@ export default function ComingSoonPage() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    const params = new URLSearchParams();
-    formData.forEach((value, key) => {
-      params.append(key, value as string);
-    });
 
     try {
       const res = await fetch('/api/crm-subscribe', {
@@ -39,6 +58,52 @@ export default function ComingSoonPage() {
     }
   };
 
+  // ── Password gate ─────────────────────────────────────────────────────────────
+  if (!unlocked) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-espresso via-walnut to-[#1e1208] overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 distressed-overlay opacity-40" />
+        <div className="absolute inset-0 vignette-overlay" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass/40 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brass/40 to-transparent" />
+
+        <div className="relative z-10 w-full max-w-sm mx-auto px-6 text-center">
+          <p className="font-display text-xs tracking-[0.35em] uppercase text-brass mb-4">
+            Vintage Peptides
+          </p>
+          <div className="w-16 mx-auto mb-6 border-t border-brass/30" />
+          <h1 className="font-display text-2xl tracking-[0.15em] uppercase text-cream mb-2">
+            Private Access
+          </h1>
+          <p className="font-body text-sm italic text-cream/50 mb-8">
+            Enter your access code to continue.
+          </p>
+
+          <form onSubmit={handleUnlock} className="flex flex-col gap-3">
+            <input
+              type="password"
+              value={pwInput}
+              onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+              placeholder="Access code"
+              autoComplete="off"
+              className="w-full bg-transparent border border-cream/20 text-cream placeholder-cream/30 font-body text-sm px-5 py-4 text-center tracking-widest focus:outline-none focus:border-brass/60 transition-colors duration-300"
+            />
+            {pwError && (
+              <p className="font-mono text-xs text-red-400">Incorrect access code.</p>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-brass hover:bg-brass-light text-espresso font-display text-xs tracking-[0.25em] uppercase px-10 py-4 border border-brass transition-all duration-300 hover:shadow-[0_0_30px_rgba(184,148,42,0.3)]"
+            >
+              Enter
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Coming Soon / Email Capture ───────────────────────────────────────────────
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-espresso via-walnut to-[#1e1208] overflow-hidden flex items-center justify-center">
       {/* Texture overlays */}

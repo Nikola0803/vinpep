@@ -1,13 +1,46 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PageLayout from '@/components/feature/PageLayout';
 
 export default function Login() {
-  const [submitted, setSubmitted] = useState(false);
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setSubmitting(true);
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Invalid email or password.');
+        return;
+      }
+
+      // Store basic user info in sessionStorage for display purposes
+      sessionStorage.setItem('vp_user', JSON.stringify({
+        userId: data.userId,
+        email: data.email,
+        displayName: data.displayName,
+      }));
+
+      navigate('/shop');
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -27,59 +60,68 @@ export default function Login() {
           </div>
 
           <div className="p-6 md:p-8 border border-brass/30 bg-cream/40">
-            {submitted ? (
-              <div className="text-center py-4">
-                <span className="w-10 h-10 flex items-center justify-center text-brass mx-auto mb-3">
-                  <i className="ri-check-line text-xl" />
-                </span>
-                <p className="font-display text-xs tracking-wider uppercase text-espresso mb-1">
-                  Authentication Required
-                </p>
-                <p className="font-body text-xs text-saddle">
-                  Supabase connection needed for full auth. This is a visual placeholder.
-                </p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="font-display text-[10px] tracking-[0.2em] uppercase text-espresso block mb-1.5">
+                  Research Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
+                  placeholder="research@institution.edu"
+                />
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="font-display text-[10px] tracking-[0.2em] uppercase text-espresso block mb-1.5">
-                    Research Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
-                    placeholder="research@institution.edu"
-                  />
-                </div>
-                <div>
-                  <label className="font-display text-[10px] tracking-[0.2em] uppercase text-espresso block mb-1.5">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
-                    placeholder="••••••••"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-brass hover:bg-brass-light text-espresso font-display text-xs tracking-[0.2em] uppercase py-3 border border-brass transition-all duration-300 hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]"
-                >
-                  Login
-                </button>
+              <div>
+                <label className="font-display text-[10px] tracking-[0.2em] uppercase text-espresso block mb-1.5">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
+                  placeholder="••••••••"
+                />
+              </div>
 
-                <div className="text-center">
-                  <Link
-                    to="/forgot-password"
-                    className="font-body text-xs text-saddle hover:text-brass underline underline-offset-2 transition-colors"
-                  >
-                    Forgot your password?
-                  </Link>
+              {error && (
+                <div className="p-3 border border-red-900/30 bg-red-900/5">
+                  <p className="font-mono text-xs text-red-800">{error}</p>
                 </div>
-              </form>
-            )}
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full font-display text-xs tracking-[0.2em] uppercase py-3 border transition-all duration-300 ${
+                  submitting
+                    ? 'bg-saddle/10 text-saddle/40 border-saddle/20 cursor-not-allowed'
+                    : 'bg-brass hover:bg-brass-light text-espresso border-brass hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]'
+                }`}
+              >
+                {submitting ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span className="w-3 h-3 border border-saddle/40 border-t-transparent rounded-full animate-spin" />
+                    Logging in…
+                  </span>
+                ) : (
+                  'Login'
+                )}
+              </button>
+
+              <div className="text-center">
+                <Link
+                  to="/forgot-password"
+                  className="font-body text-xs text-saddle hover:text-brass underline underline-offset-2 transition-colors"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            </form>
 
             <div className="mt-6 pt-6 border-t border-brass/20 text-center">
               <p className="font-body text-xs text-saddle">

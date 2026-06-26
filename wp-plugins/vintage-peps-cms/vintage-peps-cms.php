@@ -3,7 +3,7 @@
  * Plugin Name: Vintage Peps CMS
  * Plugin URI:  https://vintagepeptides.com
  * Description: Content management for the Vintage Peptides React frontend. Manages FAQs, testimonials, COA records, blog posts, hero config, and exposes everything via REST API.
- * Version:     1.2.0
+ * Version:     1.3.0
  * Author:      Vintage Peptides
  * Text Domain: vintage-peps-cms
  * Requires WP: 6.0
@@ -12,7 +12,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'VPMS_VERSION', '1.2.0' );
+define( 'VPMS_VERSION', '1.3.0' );
 define( 'VPMS_DIR',     plugin_dir_path( __FILE__ ) );
 define( 'VPMS_URL',     plugin_dir_url( __FILE__ ) );
 

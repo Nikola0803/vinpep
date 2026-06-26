@@ -1,6 +1,5 @@
 import type { RouteObject } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-import ComingSoon from "../pages/coming-soon/page";
 import Home from "../pages/home/page";
 import Shop from "../pages/shop/page";
 import ProductDetail from "../pages/product/page";

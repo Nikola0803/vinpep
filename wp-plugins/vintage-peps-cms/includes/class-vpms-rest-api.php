@@ -68,6 +68,13 @@ class VPMS_REST_API {
             'permission_callback' => '__return_true',
         ] );
 
+        // ── Auth: Login ───────────────────────────────────────────────────────
+        register_rest_route( self::NS, '/login', [
+            'methods'             => 'POST',
+            'callback'            => [ __CLASS__, 'do_login' ],
+            'permission_callback' => '__return_true',
+        ] );
+
         // ── Auth: Forgot / Reset Password ────────────────────────────────────
         register_rest_route( self::NS, '/forgot-password', [
             'methods'             => 'POST',
@@ -385,6 +392,42 @@ class VPMS_REST_API {
         $order->update_status( 'processing', 'Marked paid via admin panel.' );
 
         return new WP_REST_Response( [ 'success' => true, 'status' => 'processing' ], 200 );
+    }
+
+    // ── Auth: Login ──────────────────────────────────────────────────────────
+
+    /**
+     * POST /wp-json/vintage-peps/v1/login
+     * Body: { email, password }
+     * Validates credentials and returns basic user info.
+     * Does NOT create a persistent WP session — used for headless credential check.
+     */
+    public static function do_login( WP_REST_Request $req ): WP_REST_Response {
+        $email    = sanitize_email( $req->get_param( 'email' ) );
+        $password = $req->get_param( 'password' );
+
+        if ( ! is_email( $email ) || ! $password ) {
+            return new WP_REST_Response( [ 'error' => 'Email and password are required.' ], 400 );
+        }
+
+        $user = get_user_by( 'email', $email );
+        if ( ! $user ) {
+            return new WP_REST_Response( [ 'error' => 'Invalid email or password.' ], 401 );
+        }
+
+        if ( ! wp_check_password( $password, $user->user_pass, $user->ID ) ) {
+            return new WP_REST_Response( [ 'error' => 'Invalid email or password.' ], 401 );
+        }
+
+        // Return minimal user info — no session token (stateless headless auth)
+        return new WP_REST_Response( [
+            'success'     => true,
+            'userId'      => $user->ID,
+            'email'       => $user->user_email,
+            'displayName' => $user->display_name,
+            'firstName'   => $user->first_name,
+            'lastName'    => $user->last_name,
+        ], 200 );
     }
 
     // ── Auth: Forgot / Reset Password ────────────────────────────────────────

@@ -61,7 +61,7 @@ export default function FAQs() {
                   }`}
                 >
                   <button
-                    onClick={() => setOpenIndex(isOpen ? null : index)}
+                    onClick={() => setOpenIndex(index)}
                     className="w-full flex items-center justify-between p-5 text-left"
                   >
                     <span className="font-display text-sm tracking-wider uppercase text-espresso pr-4">

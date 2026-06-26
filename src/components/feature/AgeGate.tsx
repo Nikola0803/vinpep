@@ -6,23 +6,13 @@ const LOGO = 'https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp
 export default function AgeGate() {
   const { isConfirmed, confirm, exit } = useAgeGate();
   const [checked, setChecked] = useState(false);
-  const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   if (isConfirmed === null || isConfirmed === true) return null;
 
-  const handleEnter = async () => {
+  const handleEnter = () => {
     if (!checked || submitting) return;
     setSubmitting(true);
-
-    if (email && email.includes('@')) {
-      fetch('/api/crm-subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
-      }).catch(() => {});
-    }
-
     confirm();
   };
 
@@ -59,24 +49,6 @@ export default function AgeGate() {
             used for lawful research purposes only.
           </span>
         </label>
-
-        {checked && (
-          <div className="mb-5">
-            <p className="font-display text-[10px] tracking-[0.15em] uppercase text-espresso mb-1.5">
-              Get early access alerts{' '}
-              <span className="font-body normal-case tracking-normal text-saddle/50">(optional)</span>
-            </p>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-              placeholder="your@email.com"
-              autoFocus
-              className="w-full bg-parchment border border-brass/40 font-body text-sm text-espresso py-2.5 px-3 focus:outline-none focus:border-brass placeholder:text-saddle/40"
-            />
-          </div>
-        )}
 
         <div className="flex flex-col sm:flex-row gap-3">
           <button

@@ -4,31 +4,28 @@ const LAUNCH_PASSWORD = import.meta.env.VITE_LAUNCH_PASSWORD ?? 'vintage2026';
 const PASSWORD_REQUIRED = LAUNCH_PASSWORD.length > 0;
 const UNLOCKED_KEY = 'vp_access_unlocked';
 
-export default function IntroVideo() {
-  const [visible, setVisible] = useState(false);
+interface Props {
+  onComplete: () => void;
+}
+
+export default function IntroVideo({ onComplete }: Props) {
+  const [visible, setVisible] = useState(true);
   const [fading, setFading] = useState(false);
   const [password, setPassword] = useState('');
   const [pwError, setPwError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    if (!sessionStorage.getItem('vp_intro_played')) {
-      setVisible(true);
-    }
-  }, []);
-
   const dismiss = () => {
     setFading(true);
     setTimeout(() => {
-      sessionStorage.setItem('vp_intro_played', '1');
       setVisible(false);
+      onComplete();
     }, 600);
   };
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     if (!PASSWORD_REQUIRED || password.trim().toLowerCase() === LAUNCH_PASSWORD.toLowerCase()) {
-      sessionStorage.setItem(UNLOCKED_KEY, '1');
       dismiss();
     } else {
       setPwError(true);

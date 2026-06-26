@@ -3,46 +3,31 @@ import { useAgeGate } from '../../hooks/useAgeGate';
 
 const LOGO = 'https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png';
 
-// Set to '' to disable the password gate (e.g. when site goes fully public).
-// Change this value and redeploy to open/close access.
-const LAUNCH_PASSWORD = import.meta.env.VITE_LAUNCH_PASSWORD ?? 'vintage2026';
-const PASSWORD_REQUIRED = LAUNCH_PASSWORD.length > 0;
-
 export default function AgeGate() {
   const { isConfirmed, confirm, exit } = useAgeGate();
   const [checked, setChecked] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [pwError, setPwError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   if (isConfirmed === null || isConfirmed === true) return null;
 
   const handleEnter = async () => {
     if (!checked || submitting) return;
-
-    // Password gate check
-    if (PASSWORD_REQUIRED && password.trim().toLowerCase() !== LAUNCH_PASSWORD.toLowerCase()) {
-      setPwError(true);
-      return;
-    }
-
     setSubmitting(true);
 
-    // Fire-and-forget email capture — never blocks entry
     if (email && email.includes('@')) {
       fetch('/api/crm-subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
-      }).catch(() => {/* silent */});
+      }).catch(() => {});
     }
 
     confirm();
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[300] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="relative w-full max-w-md bg-parchment brass-double-border p-8 md:p-10 shadow-2xl">
         <div className="flex justify-center mb-6">
           <img src={LOGO} alt="Vintage Peptides" className="h-20 w-auto object-contain" />
@@ -62,7 +47,6 @@ export default function AgeGate() {
           human consumption.
         </p>
 
-        {/* Age checkbox */}
         <label className="flex items-start gap-3 cursor-pointer mb-5">
           <input
             type="checkbox"
@@ -76,46 +60,21 @@ export default function AgeGate() {
           </span>
         </label>
 
-        {/* Fields — only show when age checkbox is ticked */}
         {checked && (
-          <div className="space-y-3 mb-5">
-            {/* Email — optional */}
-            <div>
-              <p className="font-display text-[10px] tracking-[0.15em] uppercase text-espresso mb-1.5">
-                Get early access alerts{' '}
-                <span className="font-body normal-case tracking-normal text-saddle/50">(optional)</span>
-              </p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full bg-parchment border border-brass/40 font-body text-sm text-espresso py-2.5 px-3 focus:outline-none focus:border-brass placeholder:text-saddle/40"
-              />
-            </div>
-
-            {/* Password — required while LAUNCH_PASSWORD is set */}
-            {PASSWORD_REQUIRED && (
-              <div>
-                <p className="font-display text-[10px] tracking-[0.15em] uppercase text-espresso mb-1.5">
-                  Access Code <span className="font-body normal-case tracking-normal text-red-700/70">(required)</span>
-                </p>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setPwError(false); }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                  placeholder="Enter access code"
-                  autoFocus
-                  className={`w-full bg-parchment border font-body text-sm text-espresso py-2.5 px-3 focus:outline-none placeholder:text-saddle/40 transition-colors ${
-                    pwError ? 'border-red-700/60 focus:border-red-700' : 'border-brass/40 focus:border-brass'
-                  }`}
-                />
-                {pwError && (
-                  <p className="font-mono text-xs text-red-700 mt-1">Incorrect access code.</p>
-                )}
-              </div>
-            )}
+          <div className="mb-5">
+            <p className="font-display text-[10px] tracking-[0.15em] uppercase text-espresso mb-1.5">
+              Get early access alerts{' '}
+              <span className="font-body normal-case tracking-normal text-saddle/50">(optional)</span>
+            </p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
+              placeholder="your@email.com"
+              autoFocus
+              className="w-full bg-parchment border border-brass/40 font-body text-sm text-espresso py-2.5 px-3 focus:outline-none focus:border-brass placeholder:text-saddle/40"
+            />
           </div>
         )}
 
@@ -143,12 +102,6 @@ export default function AgeGate() {
             Exit
           </button>
         </div>
-
-        {PASSWORD_REQUIRED && (
-          <p className="text-center font-body text-[10px] text-saddle/40 mt-4">
-            Private preview — access by invitation only
-          </p>
-        )}
       </div>
     </div>
   );

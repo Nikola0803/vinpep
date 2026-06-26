@@ -211,8 +211,8 @@ function vpsub_send_renewal_email( array $sub ): void {
 
 function vpsub_admin_menu(): void {
     add_menu_page(
-        'VP Subscriptions',
-        'VP Subscriptions',
+        'Subscribe & Save Orders',
+        'Subscribe & Save',
         'manage_options',
         'vp-subscriptions',
         'vpsub_admin_page',

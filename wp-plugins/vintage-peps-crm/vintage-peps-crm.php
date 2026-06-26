@@ -175,8 +175,8 @@ function vpcrm_send_welcome_email( string $email, string $name ): void {
 
 function vpcrm_admin_menu(): void {
     add_menu_page(
-        'VP Subscribers',
-        'VP Subscribers',
+        'Email Signups',
+        'Email Signups',
         'manage_options',
         'vp-crm-subscribers',
         'vpcrm_admin_page',
@@ -192,7 +192,7 @@ function vpcrm_admin_page(): void {
     $count = count( $rows );
     ?>
     <div class="wrap">
-        <h1>VP Subscribers <span class="title-count theme-count"><?php echo esc_html( $count ); ?></span></h1>
+        <h1>Email Signups <span class="title-count theme-count"><?php echo esc_html( $count ); ?></span></h1>
 
         <?php if ( isset( $_GET['exported'] ) ) : ?>
             <div class="notice notice-success"><p>CSV exported.</p></div>

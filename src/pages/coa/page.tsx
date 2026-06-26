@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { coaEntries } from '@/mocks/coa';
+import type { CoaEntry } from '@/mocks/coa';
 import PageLayout from '@/components/feature/PageLayout';
 
 interface DetailModalProps {
@@ -203,10 +203,24 @@ function PdfModal({ url, onClose }: { url: string; onClose: () => void }) {
 
 export default function CoaPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedEntry, setSelectedEntry] = useState<(typeof coaEntries)[0] | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<CoaEntry | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [entries, setEntries] = useState<CoaEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState('');
 
-  const filtered = coaEntries.filter((entry) => {
+  useEffect(() => {
+    fetch('/api/coas')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data: CoaEntry[]) => setEntries(data))
+      .catch((err) => setFetchError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = entries.filter((entry) => {
     const q = searchQuery.toLowerCase();
     return (
       entry.productName.toLowerCase().includes(q) ||
@@ -267,8 +281,23 @@ export default function CoaPage() {
             </div>
           </div>
 
+          {/* Loading / error states */}
+          {loading && (
+            <div className="text-center py-16 border border-brass/30 bg-cream/40">
+              <span className="w-6 h-6 border-2 border-brass border-t-transparent rounded-full animate-spin inline-block mb-3" />
+              <p className="font-mono text-xs text-saddle/60">Loading records…</p>
+            </div>
+          )}
+          {fetchError && !loading && (
+            <div className="text-center py-12 border border-red-900/20 bg-red-900/5 mb-6">
+              <i className="ri-error-warning-line text-red-700 text-2xl block mb-2" />
+              <p className="font-mono text-xs text-red-700">{fetchError}</p>
+              <p className="font-mono text-[10px] text-saddle/60 mt-1">Could not load COA records from server.</p>
+            </div>
+          )}
+
           {/* Desktop Table */}
-          <div className="hidden md:block overflow-x-auto border border-brass/30 bg-cream/40">
+          {!loading && !fetchError && <div className="hidden md:block overflow-x-auto border border-brass/30 bg-cream/40">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-brass/30 bg-espresso/5">
@@ -372,10 +401,10 @@ export default function CoaPage() {
                 ))}
               </tbody>
             </table>
-          </div>
+          </div>}
 
           {/* Mobile Cards */}
-          <div className="md:hidden space-y-3">
+          {!loading && !fetchError && <div className="md:hidden space-y-3">
             {filtered.map((entry) => (
               <div
                 key={entry.id}
@@ -441,9 +470,9 @@ export default function CoaPage() {
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
 
-          {filtered.length === 0 && (
+          {filtered.length === 0 && !loading && !fetchError && (
             <div className="text-center py-16 border border-brass/30 bg-cream/40">
               <span className="w-12 h-12 flex items-center justify-center mx-auto mb-4 text-saddle/40">
                 <i className="ri-search-line text-2xl" />

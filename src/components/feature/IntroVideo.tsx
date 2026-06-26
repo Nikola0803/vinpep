@@ -40,6 +40,7 @@ export default function IntroVideo() {
         muted
         playsInline
         onEnded={dismiss}
+        onError={dismiss}
         className="w-full h-full object-cover"
       />
 

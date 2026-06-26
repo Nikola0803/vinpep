@@ -18,8 +18,7 @@ export default function ComingSoonPage() {
     });
 
     try {
-      const wcUrl = import.meta.env.VITE_WC_URL ?? '';
-      const res = await fetch(`${wcUrl}/wp-json/vp-crm/v1/subscribe`, {
+      const res = await fetch('/api/crm-subscribe', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

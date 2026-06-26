@@ -15,11 +15,18 @@ defined( 'ABSPATH' ) || exit;
 define( 'VPSS_VERSION', '1.2.0' );
 
 add_action( 'plugins_loaded', function () {
-    add_action( 'rest_api_init',          'vpss_register_routes' );
-    add_action( 'woocommerce_new_order',  'vpss_send_p2p_confirmation', 20, 2 );
-    add_action( 'admin_menu',             'vpss_admin_menu' );
-    add_action( 'admin_init',             'vpss_register_settings' );
+    add_action( 'rest_api_init',                       'vpss_register_routes' );
+    // woocommerce_new_order fires BEFORE REST meta_data is written.
+    // woocommerce_rest_insert_order_object fires AFTER — correct for our use case.
+    add_action( 'woocommerce_rest_insert_order_object', 'vpss_rest_order_created', 10, 3 );
+    add_action( 'admin_menu',                          'vpss_admin_menu' );
+    add_action( 'admin_init',                          'vpss_register_settings' );
 } );
+
+function vpss_rest_order_created( WC_Order $order, WP_REST_Request $request, bool $creating ): void {
+    if ( ! $creating ) return; // only on new orders, not updates
+    vpss_send_p2p_confirmation( $order->get_id(), $order );
+}
 
 // ── REST Routes ───────────────────────────────────────────────────────────────
 

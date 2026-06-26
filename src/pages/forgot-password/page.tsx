@@ -14,10 +14,10 @@ export default function ForgotPassword() {
     setSubmitting(true);
 
     try {
-      await fetch('/api/forgot-password', {
+      await fetch('/api/password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ action: 'forgot', email }),
       });
       // Always show success — never reveal if email exists
       setSent(true);

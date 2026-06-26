@@ -1,0 +1,5 @@
+api/btc-debug.ts
+api/btc-address.ts
+api/btc-payment-notify.ts
+api/forgot-password.ts
+api/reset-password.ts

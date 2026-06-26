@@ -186,7 +186,7 @@ const CRYPTO_ADDRESSES: Record<string, Record<'eth' | 'sol', string>> = {
 // ─── BTC address fetch ────────────────────────────────────────────────────────
 
 async function fetchBtcAddress(invoiceId: string): Promise<{ address: string; index: number }> {
-  const res = await fetch(`/api/btc-address?invoiceId=${encodeURIComponent(invoiceId)}`, {
+  const res = await fetch(`/api/btc?invoiceId=${encodeURIComponent(invoiceId)}`, {
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {

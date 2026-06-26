@@ -95,7 +95,7 @@ function isValidPayload(body: unknown): body is CreateOrderPayload {
   const b = body as Record<string, unknown>;
   if (typeof b.payment_method !== 'string' || !b.payment_method) return false;
   if (typeof b.payment_method_title !== 'string') return false;
-  if (b.status !== 'pending') return false;
+  if (b.status !== 'pending' && b.status !== 'on-hold') return false;
   if (!b.billing || typeof b.billing !== 'object') return false;
   if (!b.shipping || typeof b.shipping !== 'object') return false;
   if (!Array.isArray(b.line_items) || b.line_items.length === 0) return false;

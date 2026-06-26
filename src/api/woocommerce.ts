@@ -35,7 +35,7 @@ export interface CreateOrderPayload {
   line_items: WcLineItem[];
   coupon_lines?: Array<{ code: string }>;
   meta_data: Array<{ key: string; value: string }>;
-  status: 'pending';
+  status: 'pending' | 'on-hold';
 }
 
 export interface WcOrder {

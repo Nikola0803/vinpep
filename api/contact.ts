@@ -7,7 +7,8 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const WC_URL = (process.env.WC_URL || process.env.VITE_WC_URL || '').replace(/\/$/, '');
+// Force HTTP — VPS has no SSL cert; server-side HTTP is not mixed content
+const WC_URL = (process.env.WC_URL || process.env.VITE_WC_URL || '').replace(/\/$/, '').replace(/^https:\/\//, 'http://');
 const WC_USER = process.env.WC_USER || '';
 const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
 const WC_KEY = process.env.WC_KEY || '';
@@ -20,24 +21,12 @@ function auth() {
 }
 
 async function wpPost(path: string, body: unknown): Promise<Response> {
-  const base = WC_URL.startsWith('https') ? WC_URL : WC_URL;
-  try {
-    return await fetch(base + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: auth() },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(8_000),
-    });
-  } catch {
-    // SSL fallback
-    const http = base.replace(/^https:\/\//, 'http://');
-    return fetch(http + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: auth() },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(8_000),
-    });
-  }
+  return fetch(WC_URL + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: auth() },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8_000),
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

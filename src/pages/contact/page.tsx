@@ -14,7 +14,6 @@ export default function Contact() {
 
     const fd = new FormData(e.currentTarget);
 
-    const wpUrl = (import.meta.env.VITE_WC_URL || 'http://db.vintagepeptides.com').replace(/\/$/, '');
     const payload = {
       name:        String(fd.get('name') ?? '').trim(),
       email:       String(fd.get('email') ?? '').trim(),
@@ -23,21 +22,18 @@ export default function Contact() {
     };
 
     try {
-      // Save to CRM directly (public endpoint)
-      await fetch(`${wpUrl}/wp-json/vp-crm/v1/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: payload.email, name: payload.name, source: 'contact-form' }),
-      });
-
-      // Admin notification (needs server-side auth, via Vercel proxy)
-      await fetch('/api/contact', {
+      // Single call through Vercel proxy — handles CRM save + admin notification server-side
+      const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
-      setSubmitted(true);
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? 'Something went wrong. Please try again.');
+      }
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {

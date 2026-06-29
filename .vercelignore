@@ -4,4 +4,4 @@ api/btc-payment-notify.ts
 api/forgot-password.ts
 api/reset-password.ts
 api/upload-payment-proof.ts
-api/crm-subscribe.ts
+api/shipstation-webhook.ts

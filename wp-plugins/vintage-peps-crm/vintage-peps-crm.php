@@ -76,6 +76,72 @@ function vpcrm_register_routes(): void {
         'callback'            => 'vpcrm_contact_notify',
         'permission_callback' => '__return_true',
     ] );
+
+    // Public coupon validation — no WC auth needed, safe to expose (discount info only)
+    register_rest_route( 'vp-crm/v1', '/validate-coupon', [
+        'methods'             => 'GET',
+        'callback'            => 'vpcrm_validate_coupon',
+        'permission_callback' => '__return_true',
+        'args'                => [
+            'code' => [ 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ],
+        ],
+    ] );
+}
+
+function vpcrm_validate_coupon( WP_REST_Request $req ): WP_REST_Response {
+    if ( ! class_exists( 'WC_Coupon' ) ) {
+        return new WP_REST_Response( [ 'valid' => false, 'error' => 'WooCommerce not active.' ], 503 );
+    }
+
+    $code   = strtolower( trim( $req->get_param( 'code' ) ) );
+    $coupon = new WC_Coupon( $code );
+
+    // WC_Coupon returns an empty object if the coupon doesn't exist
+    if ( ! $coupon->get_id() ) {
+        return new WP_REST_Response( [ 'valid' => false, 'error' => 'Invalid or expired coupon code.' ], 200 );
+    }
+
+    // Check expiry
+    $expiry = $coupon->get_date_expires();
+    if ( $expiry && $expiry->getTimestamp() < time() ) {
+        return new WP_REST_Response( [ 'valid' => false, 'error' => 'This coupon has expired.' ], 200 );
+    }
+
+    // Check usage limit
+    $limit = $coupon->get_usage_limit();
+    $used  = $coupon->get_usage_count();
+    if ( $limit && $used >= $limit ) {
+        return new WP_REST_Response( [ 'valid' => false, 'error' => 'This coupon has reached its usage limit.' ], 200 );
+    }
+
+    $discount_type = $coupon->get_discount_type(); // percent, fixed_cart, fixed_product, free_shipping
+    $amount        = (float) $coupon->get_amount();
+    $free_shipping = $coupon->get_free_shipping();
+
+    // Map to frontend type
+    if ( $discount_type === 'percent' ) {
+        $type = 'percent';
+    } elseif ( $discount_type === 'free_shipping' ) {
+        $type = 'free_shipping';
+    } else {
+        $type = 'flat';
+    }
+
+    // Build human label
+    $parts = [];
+    if ( $type === 'percent' && $amount > 0 )      $parts[] = "{$amount}% off";
+    elseif ( $type === 'flat' && $amount > 0 )     $parts[] = '$' . number_format( $amount, 2 ) . ' off';
+    if ( $free_shipping || $type === 'free_shipping' ) $parts[] = 'free shipping';
+    $label = implode( ' + ', $parts ) ?: 'Discount applied';
+
+    return new WP_REST_Response( [
+        'valid'        => true,
+        'code'         => strtoupper( $code ),
+        'type'         => $type,
+        'value'        => $amount,
+        'freeShipping' => $free_shipping || $type === 'free_shipping',
+        'label'        => $label,
+    ], 200 );
 }
 
 function vpcrm_contact_notify( WP_REST_Request $req ): WP_REST_Response {

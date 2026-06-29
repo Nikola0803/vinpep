@@ -470,12 +470,14 @@ export default function CheckoutPage() {
     if (!code || couponLoading) return;
     setCouponLoading(true);
     setCouponError('');
+    // Call WP plugin directly — no auth needed, works over HTTP, avoids Vercel→VPS SSL issues
+    const wpUrl = (import.meta.env.VITE_WC_URL || 'http://db.vintagepeptides.com').replace(/\/$/, '');
     try {
-      const res = await fetch(`/api/validate-coupon?code=${encodeURIComponent(code)}`, {
+      const res = await fetch(`${wpUrl}/wp-json/vp-crm/v1/validate-coupon?code=${encodeURIComponent(code)}`, {
         signal: AbortSignal.timeout(8_000),
       });
       const data = await res.json() as { valid?: boolean; error?: string; code?: string; type?: LiveCoupon['type']; value?: number; freeShipping?: boolean; label?: string };
-      if (res.ok && data.valid) {
+      if (data.valid) {
         setAppliedCoupon({
           code: data.code!,
           type: data.type!,

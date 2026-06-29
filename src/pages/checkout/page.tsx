@@ -163,12 +163,15 @@ const PAYMENT_METHODS = [
   },
 ];
 
-// ─── Mock coupons (replace with WC API call in production) ───────────────────
+// ─── Live coupon type (from /api/validate-coupon) ────────────────────────────
 
-const VALID_COUPONS: Record<string, { type: 'flat' | 'percent'; value: number; label: string }> = {
-  RESEARCH15: { type: 'percent', value: 15, label: '15% off' },
-  SAVE20: { type: 'flat', value: 20, label: '$20 off' },
-};
+interface LiveCoupon {
+  code: string;
+  type: 'percent' | 'flat' | 'free_shipping';
+  value: number;
+  freeShipping: boolean;
+  label: string;
+}
 
 // ─── Crypto stablecoin addresses ─────────────────────────────────────────────
 
@@ -405,8 +408,9 @@ export default function CheckoutPage() {
 
   const [selectedPayment, setSelectedPayment] = useState('');
   const [couponInput, setCouponInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<typeof VALID_COUPONS[string] | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<LiveCoupon | null>(null);
   const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -434,18 +438,19 @@ export default function CheckoutPage() {
 
   // ── Computed totals ──────────────────────────────────────────────────────────
 
-  const shipping = totalPrice >= 200 ? 0 : 15;
   const isBtc = selectedPayment === 'btc';
   const isCrypto = selectedPayment === 'usdc' || selectedPayment === 'usdt';
   const btcDiscount = isBtc ? parseFloat(((totalPrice * 5) / 100).toFixed(2)) : 0;
   let couponDiscount = 0;
-  if (appliedCoupon) {
+  if (appliedCoupon && appliedCoupon.type !== 'free_shipping') {
     couponDiscount =
       appliedCoupon.type === 'percent'
         ? parseFloat(((totalPrice * appliedCoupon.value) / 100).toFixed(2))
         : appliedCoupon.value;
   }
   const discount = couponDiscount; // kept for AuditLogEntry compat
+  const hasFreeShipping = appliedCoupon?.freeShipping ?? false;
+  const shipping = (hasFreeShipping || totalPrice >= 200) ? 0 : 15;
 
   // ── Tax (Idaho physical nexus only) ──────────────────────────────────────────
   // We collect sales tax only for Idaho (physical nexus). All other states are
@@ -460,15 +465,33 @@ export default function CheckoutPage() {
 
   // ── Coupon ───────────────────────────────────────────────────────────────────
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
-    if (!code) return;
-    const coupon = VALID_COUPONS[code];
-    if (coupon) {
-      setAppliedCoupon(coupon);
-      setCouponError('');
-    } else {
-      setCouponError('Invalid or expired coupon code.');
+    if (!code || couponLoading) return;
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const res = await fetch(`/api/validate-coupon?code=${encodeURIComponent(code)}`, {
+        signal: AbortSignal.timeout(8_000),
+      });
+      const data = await res.json() as { valid?: boolean; error?: string; code?: string; type?: LiveCoupon['type']; value?: number; freeShipping?: boolean; label?: string };
+      if (res.ok && data.valid) {
+        setAppliedCoupon({
+          code: data.code!,
+          type: data.type!,
+          value: data.value ?? 0,
+          freeShipping: data.freeShipping ?? false,
+          label: data.label ?? '',
+        });
+        setCouponError('');
+      } else {
+        setAppliedCoupon(null);
+        setCouponError(data.error ?? 'Invalid or expired coupon code.');
+      }
+    } catch {
+      setCouponError('Could not validate coupon. Please try again.');
+    } finally {
+      setCouponLoading(false);
     }
   };
 
@@ -1278,9 +1301,11 @@ export default function CheckoutPage() {
                           placeholder="ENTER CODE"
                           className="flex-1 bg-parchment border border-brass/40 font-mono text-xs text-espresso py-2 px-3 focus:outline-none focus:border-brass placeholder:text-saddle/30 uppercase"
                         />
-                        <button type="button" onClick={applyCoupon}
-                          className="px-4 py-2 bg-brass/10 border border-brass/30 text-brass font-display text-[10px] tracking-wider uppercase hover:bg-brass/20 transition-colors">
-                          Apply
+                        <button type="button" onClick={applyCoupon} disabled={couponLoading}
+                          className="px-4 py-2 bg-brass/10 border border-brass/30 text-brass font-display text-[10px] tracking-wider uppercase hover:bg-brass/20 transition-colors disabled:opacity-50">
+                          {couponLoading
+                            ? <span className="w-3 h-3 border border-brass border-t-transparent rounded-full animate-spin inline-block" />
+                            : 'Apply'}
                         </button>
                       </div>
                     )}
@@ -1308,7 +1333,9 @@ export default function CheckoutPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-body text-xs text-saddle">Shipping</span>
                       <span className="font-mono text-sm text-espresso">
-                        {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                        {shipping === 0
+                          ? <span className="text-green-700">{hasFreeShipping ? 'Free (coupon)' : 'Free'}</span>
+                          : `$${shipping.toFixed(2)}`}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

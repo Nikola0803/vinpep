@@ -69,6 +69,43 @@ function vpcrm_register_routes(): void {
         'callback'            => 'vpcrm_get_subscribers',
         'permission_callback' => fn() => current_user_can( 'manage_options' ),
     ] );
+
+    // Contact form notification (called by Vercel api/contact.ts)
+    register_rest_route( 'vp-crm/v1', '/contact-notify', [
+        'methods'             => 'POST',
+        'callback'            => 'vpcrm_contact_notify',
+        'permission_callback' => '__return_true',
+    ] );
+}
+
+function vpcrm_contact_notify( WP_REST_Request $req ): WP_REST_Response {
+    $name        = sanitize_text_field( $req->get_param( 'name' ) ?? '' );
+    $email       = sanitize_email( $req->get_param( 'email' ) ?? '' );
+    $institution = sanitize_text_field( $req->get_param( 'institution' ) ?? '' );
+    $message     = sanitize_textarea_field( $req->get_param( 'message' ) ?? '' );
+
+    if ( ! $email ) {
+        return new WP_REST_Response( [ 'error' => 'email required' ], 400 );
+    }
+
+    $admin_email = get_option( 'admin_email' );
+    $subject     = "New Contact Form — {$name} <{$email}>";
+
+    $body  = "New contact form submission from vintagepeptides.com\r\n\r\n";
+    $body .= "Name:        {$name}\r\n";
+    $body .= "Email:       {$email}\r\n";
+    $body .= "Institution: {$institution}\r\n\r\n";
+    $body .= "Message:\r\n{$message}\r\n";
+
+    $headers = [
+        'Content-Type: text/plain; charset=UTF-8',
+        'From: Vintage Peptides Site <orders@vintagepeptides.com>',
+        'Reply-To: ' . $email,
+    ];
+
+    wp_mail( $admin_email, $subject, $body, $headers );
+
+    return new WP_REST_Response( [ 'success' => true ], 200 );
 }
 
 function vpcrm_subscribe( WP_REST_Request $req ): WP_REST_Response {

@@ -1,12 +1,48 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import PageLayout from '@/components/feature/PageLayout';
 
 export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setSubmitting(true);
+
+    const fd = new FormData(e.currentTarget);
+
+    const wpUrl = (import.meta.env.VITE_WC_URL || 'http://db.vintagepeptides.com').replace(/\/$/, '');
+    const payload = {
+      name:        String(fd.get('name') ?? '').trim(),
+      email:       String(fd.get('email') ?? '').trim(),
+      institution: String(fd.get('institution') ?? '').trim(),
+      message:     String(fd.get('message') ?? '').trim(),
+    };
+
+    try {
+      // Save to CRM directly (public endpoint)
+      await fetch(`${wpUrl}/wp-json/vp-crm/v1/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: payload.email, name: payload.name, source: 'contact-form' }),
+      });
+
+      // Admin notification (needs server-side auth, via Vercel proxy)
+      await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      setSubmitted(true);
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,7 +82,6 @@ export default function Contact() {
                   </div>
                 </div>
               </div>
-
             </div>
 
             {/* Form */}
@@ -64,12 +99,13 @@ export default function Contact() {
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="font-display text-[10px] tracking-[0.2em] uppercase text-espresso block mb-1.5">
                       Full Name
                     </label>
                     <input
+                      name="name"
                       type="text"
                       required
                       className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
@@ -81,6 +117,7 @@ export default function Contact() {
                       Institution
                     </label>
                     <input
+                      name="institution"
                       type="text"
                       className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
                       placeholder="University / Laboratory"
@@ -91,6 +128,7 @@ export default function Contact() {
                       Email
                     </label>
                     <input
+                      name="email"
                       type="email"
                       required
                       className="w-full bg-parchment border border-brass/40 py-2.5 px-3 font-body text-sm text-espresso placeholder:text-saddle/50 focus:outline-none focus:border-brass transition-colors"
@@ -102,6 +140,7 @@ export default function Contact() {
                       Message
                     </label>
                     <textarea
+                      name="message"
                       rows={4}
                       required
                       maxLength={500}
@@ -110,11 +149,28 @@ export default function Contact() {
                     />
                     <p className="font-mono text-[10px] text-saddle/50 mt-1 text-right">Max 500 characters</p>
                   </div>
+
+                  {error && (
+                    <div className="p-3 border border-red-900/30 bg-red-900/5">
+                      <p className="font-mono text-xs text-red-800">{error}</p>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className="w-full bg-brass hover:bg-brass-light text-espresso font-display text-xs tracking-[0.2em] uppercase py-3 border border-brass transition-all duration-300 hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]"
+                    disabled={submitting}
+                    className={`w-full font-display text-xs tracking-[0.2em] uppercase py-3 border transition-all duration-300 ${
+                      submitting
+                        ? 'bg-saddle/10 text-saddle/40 border-saddle/20 cursor-not-allowed'
+                        : 'bg-brass hover:bg-brass-light text-espresso border-brass hover:shadow-[0_0_15px_rgba(184,148,42,0.3)]'
+                    }`}
                   >
-                    Send Message
+                    {submitting ? (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="w-3 h-3 border border-saddle/40 border-t-transparent rounded-full animate-spin" />
+                        Sending…
+                      </span>
+                    ) : 'Send Message'}
                   </button>
                 </form>
               )}

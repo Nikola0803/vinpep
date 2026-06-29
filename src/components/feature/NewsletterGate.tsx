@@ -16,11 +16,12 @@ export default function NewsletterGate({ onComplete }: Props) {
     e.preventDefault();
     if (!email || submitting) return;
     setSubmitting(true);
+    const wpUrl = (import.meta.env.VITE_WC_URL || 'http://db.vintagepeptides.com').replace(/\/$/, '');
     try {
-      await fetch('/api/crm-subscribe', {
+      await fetch(`${wpUrl}/wp-json/vp-crm/v1/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), name: name.trim() }),
+        body: JSON.stringify({ email: email.trim(), name: name.trim(), source: 'newsletter-popup' }),
       });
     } catch { /* non-fatal */ }
     setDone(true);

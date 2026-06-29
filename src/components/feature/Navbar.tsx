@@ -51,7 +51,7 @@ export default function Navbar() {
             <img
               src="https://db.vintagepeptides.com/wp-content/uploads/2026/06/WhatsApp_Image_2026-06-17_at_15.47.54-removebg-preview.png"
               alt="Vintage Peptides"
-              className="h-14 w-auto object-contain group-hover:opacity-80 transition-opacity"
+              className="h-28 w-auto object-contain group-hover:opacity-80 transition-opacity"
             />
           </Link>
 

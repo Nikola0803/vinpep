@@ -156,7 +156,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // 1. Fetch all published products (up to 100)
     const productsRes = await fetch(
-      `${WC_URL}/wp-json/wc/v3/products?per_page=100&status=publish&storefront=vintage`,
+      `${WC_URL}/wp-json/wc/v3/products?per_page=100&status=publish`,
       { headers, signal: AbortSignal.timeout(15_000) }
     );
 
@@ -165,7 +165,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(502).json({ error: `WC products fetch failed (${productsRes.status})`, detail: text });
     }
 
-    const wcProducts: any[] = await productsRes.json();
+    const allProducts: any[] = await productsRes.json();
+
+    // Filter by storefront: keep products tagged 'vintage' OR untagged (show everywhere)
+    const wcProducts = allProducts.filter((p) => {
+      const sfMeta = (p.meta_data ?? []).find((m: any) => m.key === '_vpcms_storefronts');
+      if (!sfMeta?.value || sfMeta.value === '[]' || sfMeta.value === '') return true;
+      try { return JSON.parse(sfMeta.value).includes('vintage'); } catch { return true; }
+    });
 
     // 2. Fetch variations for all variable products in parallel
     const variableProducts = wcProducts.filter((p) => p.type === 'variable');

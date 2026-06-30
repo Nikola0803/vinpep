@@ -140,7 +140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Tag every order with its storefront so one WP admin can filter by brand.
     // Set STOREFRONT=vintage on the Vintage Vercel project, STOREFRONT=msv on MSV's.
-    const storefrontMeta = { key: 'storefront', value: process.env.STOREFRONT || 'vintage' };
+    const storefrontMeta = { key: 'storefront', value: process.env.STOREFRONT || 'vp' };
     const existingMeta: Array<{ key: string; value: string }> = req.body.meta_data ?? [];
     const meta_data = existingMeta.some((m) => m.key === 'storefront')
       ? existingMeta

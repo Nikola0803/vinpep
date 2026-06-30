@@ -36,7 +36,7 @@ export async function assignFromServer(
   if ( ! WP_BASE ) return null;
   try {
     const res = await fetch(
-      `${ WP_BASE }/wp-json/vp-p2p/v1/assign?method=${ method }`,
+      `${ WP_BASE }/wp-json/vp-p2p/v1/assign?method=${ method }&storefront=vintage`,
       { signal: AbortSignal.timeout( 5000 ) }
     );
     if ( ! res.ok ) return null;

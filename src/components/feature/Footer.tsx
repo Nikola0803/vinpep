@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useSections } from '@/context/SectionsContext';
 
 export default function Footer() {
+  const { sections } = useSections();
+  const s = sections.footer;
+
   return (
     <footer className="bg-espresso text-cream/80 relative">
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-16 pb-8">
@@ -98,13 +102,13 @@ export default function Footer() {
                 <span className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-phone-line text-xs text-brass" />
                 </span>
-                (866) 788-GLP1
+                {s.phone}
               </li>
               <li className="flex items-center gap-2">
                 <span className="w-4 h-4 flex items-center justify-center">
                   <i className="ri-mail-line text-xs text-brass" />
                 </span>
-                research@vintagepeptides.com
+                {s.email}
               </li>
             </ul>
           </div>
@@ -113,23 +117,27 @@ export default function Footer() {
         <div className="border-t border-brass/20 pt-6 mb-6">
           <div className="brass-rule max-w-xs mx-auto mb-6" />
           <p className="font-body text-[10px] italic text-cream/50 text-center leading-relaxed max-w-4xl mx-auto">
-            All products sold by Vintage Peptides are intended for laboratory research use only.
-            These products are not for human consumption, nor are they intended to diagnose, treat,
-            cure, or prevent any disease or condition. By purchasing from this site, you affirm that
-            you are a qualified researcher aged 21 or older and understand the risks associated with
-            research chemicals. All statements and products on this website have not been evaluated
-            by the Food and Drug Administration.
+            {s.disclaimer}
           </p>
           <div className="flex items-center justify-center gap-5 mt-6">
-            <span className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer">
+            <a
+              href={s.instagram_url}
+              className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer"
+            >
               <i className="ri-instagram-line" />
-            </span>
-            <span className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer">
+            </a>
+            <a
+              href={s.twitter_url}
+              className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer"
+            >
               <i className="ri-twitter-x-line" />
-            </span>
-            <span className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer">
+            </a>
+            <a
+              href={s.linkedin_url}
+              className="w-5 h-5 flex items-center justify-center text-cream/40 hover:text-brass transition-colors cursor-pointer"
+            >
               <i className="ri-linkedin-line" />
-            </span>
+            </a>
           </div>
         </div>
 
@@ -138,14 +146,15 @@ export default function Footer() {
             <span className="font-display text-[10px] tracking-widest uppercase text-brass">
               We Accept
             </span>
-            <span className="font-mono text-xs text-cream/60">Zelle</span>
-            <span className="text-cream/20">·</span>
-            <span className="font-mono text-xs text-cream/60">Cash App</span>
-            <span className="text-cream/20">·</span>
-            <span className="font-mono text-xs text-cream/60">Venmo</span>
+            {s.payment_methods.map((method, i) => (
+              <span key={i} className="inline-flex items-center gap-1">
+                {i > 0 && <span className="text-cream/20">·</span>}
+                <span className="font-mono text-xs text-cream/60">{method}</span>
+              </span>
+            ))}
           </div>
           <div className="flex items-center gap-4 text-cream/40">
-            <p className="font-body text-[11px]">© 2026 Vintage Peptides. All rights reserved.</p>
+            <p className="font-body text-[11px]">{s.copyright}</p>
             <span className="text-cream/20">·</span>
             <p className="font-body text-[11px]">Made by <a href="https://velocity72.com" target="_blank" rel="nofollow" className="hover:text-brass transition-colors">Velocity72</a></p>
           </div>

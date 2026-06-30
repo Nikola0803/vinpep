@@ -9,6 +9,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const WC_URL = process.env.WC_URL || process.env.VITE_WC_URL || '';
+const STOREFRONT = process.env.STOREFRONT || 'vintage';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -32,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const tryFetch = async (url: string) => fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email.trim(), name: name ?? '', source: 'newsletter-popup' }),
+    body: JSON.stringify({ email: email.trim(), name: name ?? '', source: 'newsletter-popup', storefront: STOREFRONT }),
     signal: AbortSignal.timeout(8_000),
   });
 

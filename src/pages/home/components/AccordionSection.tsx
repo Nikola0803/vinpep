@@ -1,24 +1,11 @@
 import { useState } from 'react';
-
-const panels = [
-  {
-    title: 'The Problem',
-    content:
-      'The research peptide market is flooded with under-tested compounds, inconsistent dosing, and vendors who treat transparency as optional. Researchers waste precious resources on peptides that fail to meet basic analytical standards — compromising their data, their time, and the integrity of their work.',
-  },
-  {
-    title: 'The Solution',
-    content:
-      'Every batch we release is validated by independent third-party HPLC and Mass Spectrometry testing. We publish complete Certificates of Analysis with every order, so you know exactly what you are working with. No guesswork. No ambiguity. Just verified, high-purity research materials.',
-  },
-  {
-    title: 'What We Do',
-    content:
-      'Vintage Peptides synthesizes and supplies research-grade peptides for qualified laboratories and research institutions. We maintain stringent cold-chain handling, batch-tracked inventory, and a direct relationship with our synthesis partners — because your research demands more than a middleman.',
-  },
-];
+import { useSections } from '@/context/SectionsContext';
 
 export default function AccordionSection() {
+  const { sections } = useSections();
+  const s = sections.accordion;
+  const panels = s.panels;
+
   const [openIndices, setOpenIndices] = useState<number[]>([0, 1, 2]);
 
   const togglePanel = (index: number) => {
@@ -33,7 +20,7 @@ export default function AccordionSection() {
         <div className="text-center mb-12">
           <span className="text-brass text-lg">❧</span>
           <h2 className="font-display text-xl md:text-2xl tracking-[0.2em] uppercase text-espresso mt-3">
-            Why We Are Different
+            {s.section_heading}
           </h2>
         </div>
 

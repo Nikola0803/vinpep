@@ -1,27 +1,10 @@
 import { Link } from 'react-router-dom';
-
-const categories = [
-  {
-    name: 'Compounds',
-    description: 'Single-peptide research compounds lyophilized to analytical grade standards.',
-    icon: 'fa-solid fa-flask',
-    link: '/shop?category=compounds',
-  },
-  {
-    name: 'Blends',
-    description: 'Pre-formulated peptide combinations optimized for synergistic research.',
-    icon: 'fa-solid fa-layer-group',
-    link: '/shop?category=blends',
-  },
-  {
-    name: 'Bioregulators',
-    description: 'Short-chain peptides targeting specific cellular and tissue functions.',
-    icon: 'fa-solid fa-dna',
-    link: '/shop?category=bioregulators',
-  },
-];
+import { useSections } from '@/context/SectionsContext';
 
 export default function CategoryTiles() {
+  const { sections } = useSections();
+  const categories = sections.categories.tiles;
+
   return (
     <section className="py-16 md:py-24 parchment-grain">
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">

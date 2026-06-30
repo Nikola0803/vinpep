@@ -1,31 +1,9 @@
-const pillars = [
-  {
-    icon: 'ri-flask-line',
-    title: 'Lab Tested USA',
-    description:
-      'Every batch is lyophilized in certified US laboratories under strict GMP-adjacent protocols. Domestic production means faster delivery and full traceability.',
-  },
-  {
-    icon: 'ri-award-line',
-    title: '99%+ Purity',
-    description:
-      'Our HPLC analytical standards demand a minimum of 99% purity. Most batches exceed 99.2%. We do not release anything that falls below our threshold.',
-  },
-  {
-    icon: 'ri-file-list-3-line',
-    title: 'Batch COA',
-    description:
-      'Every vial ships with its corresponding Certificate of Analysis. Lot numbers are matched, dated, and digitally archived for your research records.',
-  },
-  {
-    icon: 'ri-truck-line',
-    title: 'Nationwide Shipping',
-    description:
-      'Temperature-controlled packaging with cold packs and insulated liners. Free expedited shipping on all orders over $200. Same-day dispatch before 2 PM EST.',
-  },
-];
+import { useSections } from '@/context/SectionsContext';
 
 export default function TrustPillars() {
+  const { sections } = useSections();
+  const pillars = sections.trust_pillars.pillars;
+
   return (
     <section className="py-16 md:py-20 bg-cream bg-cream-grain">
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">

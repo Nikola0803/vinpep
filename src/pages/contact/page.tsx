@@ -1,7 +1,11 @@
 import { useState, useRef } from 'react';
 import PageLayout from '@/components/feature/PageLayout';
+import { useSections } from '@/context/SectionsContext';
 
 export default function Contact() {
+  const { sections } = useSections();
+  const s = sections.contact_page;
+
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +52,7 @@ export default function Contact() {
           <div className="text-center mb-12">
             <span className="text-brass text-lg">❧</span>
             <h1 className="font-display text-2xl md:text-3xl tracking-[0.2em] uppercase text-espresso mt-3">
-              Contact Our Research Team
+              {s.heading}
             </h1>
           </div>
 
@@ -64,8 +68,8 @@ export default function Contact() {
                     <i className="ri-phone-line" />
                   </span>
                   <div>
-                    <p className="text-espresso font-medium">Research Support</p>
-                    <p>(866) 788-GLP1</p>
+                    <p className="text-espresso font-medium">{s.phone_label}</p>
+                    <p>{s.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -73,8 +77,8 @@ export default function Contact() {
                     <i className="ri-mail-line" />
                   </span>
                   <div>
-                    <p className="text-espresso font-medium">Email</p>
-                    <p>research@vintagepeptides.com</p>
+                    <p className="text-espresso font-medium">{s.email_label}</p>
+                    <p>{s.email}</p>
                   </div>
                 </div>
               </div>
@@ -88,10 +92,10 @@ export default function Contact() {
                     <i className="ri-check-line text-2xl" />
                   </span>
                   <h3 className="font-display text-sm tracking-[0.2em] uppercase text-espresso mb-2">
-                    Message Received
+                    {s.success_heading}
                   </h3>
                   <p className="font-body text-sm text-saddle">
-                    Our research team will respond within 24 hours.
+                    {s.success_body}
                   </p>
                 </div>
               ) : (

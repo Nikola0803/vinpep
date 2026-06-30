@@ -138,7 +138,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return item;
     });
 
-    const payload = { ...req.body, line_items: resolvedItems };
+    // Tag every order with its storefront so one WP admin can filter by brand.
+    // Set STOREFRONT=vintage on the Vintage Vercel project, STOREFRONT=msv on MSV's.
+    const storefrontMeta = { key: 'storefront', value: process.env.STOREFRONT || 'vintage' };
+    const existingMeta: Array<{ key: string; value: string }> = req.body.meta_data ?? [];
+    const meta_data = existingMeta.some((m) => m.key === 'storefront')
+      ? existingMeta
+      : [...existingMeta, storefrontMeta];
+
+    const payload = { ...req.body, line_items: resolvedItems, meta_data };
 
     // AbortSignal.timeout is Node 17.3+ — use a manual controller as fallback
     let signal: AbortSignal | undefined;

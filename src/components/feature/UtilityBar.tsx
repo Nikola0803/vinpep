@@ -1,29 +1,32 @@
 import { useCart } from '../../context/CartContext';
+import { useSections } from '@/context/SectionsContext';
 
 export default function UtilityBar() {
   const { totalItems, setIsOpen } = useCart();
+  const { sections } = useSections();
+  const { phone, email } = sections.footer;
 
   return (
     <div className="w-full bg-espresso text-cream py-2 px-4 md:px-8 relative z-40">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center gap-6 text-xs font-body tracking-wide">
           <a
-            href="tel:+18667884571"
+            href={`tel:${phone.replace(/\D/g, '')}`}
             className="flex items-center gap-2 hover:text-brass transition-colors whitespace-nowrap"
           >
             <span className="w-4 h-4 flex items-center justify-center">
               <i className="ri-phone-line text-xs" />
             </span>
-            (866) 788-GLP1
+            {phone}
           </a>
           <a
-            href="mailto:research@vintagepeptides.com"
+            href={`mailto:${email}`}
             className="hidden sm:flex items-center gap-2 hover:text-brass transition-colors whitespace-nowrap"
           >
             <span className="w-4 h-4 flex items-center justify-center">
               <i className="ri-mail-line text-xs" />
             </span>
-            research@vintagepeptides.com
+            {email}
           </a>
         </div>
 

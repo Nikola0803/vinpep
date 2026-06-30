@@ -1,12 +1,8 @@
+import { useSections } from '@/context/SectionsContext';
+
 export default function TickerBar() {
-  const items = [
-    'Free Shipping $200+',
-    '99%+ HPLC Purity',
-    'Research Use Only',
-    'Not for Human Consumption',
-    'USA Made',
-    'Batch COA Included',
-  ];
+  const { sections } = useSections();
+  const items = sections.ticker.items;
 
   const tickerContent = items.map((item, i) => (
     <span key={i} className="inline-flex items-center mx-8 whitespace-nowrap">

@@ -13,6 +13,7 @@ const WC_USER = process.env.WC_USER || '';
 const WC_APP_PASSWORD = process.env.WC_APP_PASSWORD || '';
 const WC_KEY = process.env.WC_KEY || '';
 const WC_SECRET = process.env.WC_SECRET || '';
+const STOREFRONT = process.env.STOREFRONT || 'vintage';
 
 function auth() {
   if (WC_USER && WC_APP_PASSWORD)
@@ -47,6 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email: String(email).trim(),
       name: String(name || '').trim(),
       source: 'contact-form',
+      storefront: STOREFRONT,
     });
   } catch (e) {
     errors.push('crm: ' + (e instanceof Error ? e.message : String(e)));
@@ -59,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email: String(email).trim(),
       institution: String(institution || '').trim(),
       message: String(message).trim(),
+      storefront: STOREFRONT,
     });
   } catch (e) {
     errors.push('notify: ' + (e instanceof Error ? e.message : String(e)));

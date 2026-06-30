@@ -450,7 +450,10 @@ export default function CheckoutPage() {
   }
   const discount = couponDiscount; // kept for AuditLogEntry compat
   const hasFreeShipping = appliedCoupon?.freeShipping ?? false;
-  const shipping = (hasFreeShipping || totalPrice >= 200) ? 0 : 15;
+  // ── Shipping rate — update these two numbers to change the policy ──────────
+  const FLAT_SHIPPING   = 15;   // $ charged when order is below free-ship threshold
+  const FREE_SHIP_ABOVE = 200;  // $ order subtotal above which shipping is free
+  const shipping = (hasFreeShipping || totalPrice >= FREE_SHIP_ABOVE) ? 0 : FLAT_SHIPPING;
 
   // ── Tax (Idaho physical nexus only) ──────────────────────────────────────────
   // We collect sales tax only for Idaho (physical nexus). All other states are

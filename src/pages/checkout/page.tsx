@@ -892,6 +892,41 @@ export default function CheckoutPage() {
                           ${confirmedOrder.total.toFixed(2)}
                         </span>
                       </div>
+
+                      {/* Quick-pay deep links for Cash App / Venmo */}
+                      {(confirmedOrder.paymentMethod === 'cashapp' || confirmedOrder.paymentMethod === 'venmo') && (
+                        <div className="mb-4 space-y-2">
+                          <p className="font-display text-[9px] tracking-[0.2em] uppercase text-saddle text-center">
+                            Quick Pay
+                          </p>
+                          {confirmedOrder.paymentMethod === 'cashapp' && (
+                            <a
+                              href={`https://cash.app/${confirmedOrder.paymentHandle.startsWith('$') ? confirmedOrder.paymentHandle : '$' + confirmedOrder.paymentHandle}?amount=${confirmedOrder.total.toFixed(2)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-3 bg-[#00D54B] hover:bg-[#00bf43] text-white font-display text-xs tracking-[0.15em] uppercase border border-[#00D54B] transition-colors"
+                            >
+                              <i className="ri-money-dollar-circle-line" />
+                              Pay ${confirmedOrder.total.toFixed(2)} via Cash App
+                            </a>
+                          )}
+                          {confirmedOrder.paymentMethod === 'venmo' && (
+                            <a
+                              href={`https://account.venmo.com/u/${confirmedOrder.paymentHandle.replace('@', '')}?txn=pay&amount=${confirmedOrder.total.toFixed(2)}&note=${encodeURIComponent(confirmedOrder.memoCode)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-3 bg-[#3D95CE] hover:bg-[#2e7eb5] text-white font-display text-xs tracking-[0.15em] uppercase border border-[#3D95CE] transition-colors"
+                            >
+                              <i className="ri-wallet-3-line" />
+                              Pay ${confirmedOrder.total.toFixed(2)} via Venmo
+                            </a>
+                          )}
+                          <p className="font-mono text-[9px] text-saddle/50 text-center">
+                            Memo code pre-filled automatically · Opens app on your device
+                          </p>
+                        </div>
+                      )}
+
                       {/* Prominent confirmation alert */}
                       <div className="p-4 border-2 border-brass bg-brass/10 flex items-start gap-3">
                         <i className="ri-screenshot-line text-brass text-xl flex-shrink-0 mt-0.5" />

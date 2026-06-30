@@ -156,7 +156,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // 1. Fetch all published products (up to 100)
     const productsRes = await fetch(
-      `${WC_URL}/wp-json/wc/v3/products?per_page=100&status=publish`,
+      `${WC_URL}/wp-json/wc/v3/products?per_page=100&status=publish&storefront=vintage`,
       { headers, signal: AbortSignal.timeout(15_000) }
     );
 
